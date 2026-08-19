@@ -118,7 +118,9 @@ cp .env.example .env
 docker compose -f docker-compose.yml -f docker-compose.dev.yml up -d --build
 ```
 
-Open http://localhost:48215
+The dev container runs as `dashhub-dev` on port 48216 so it can run in parallel with a released image container (`dashhub` on 48215).
+
+Open http://localhost:48216
 
 ### Configuration via UI
 

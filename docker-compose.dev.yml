@@ -6,6 +6,9 @@
 #
 # Merges with docker-compose.yml; overrides the pre-built GHCR image with a
 # local build so developers can work against the current source tree.
+#
+# Runs as dashhub-dev on a separate host port (48216) so it can run in
+# parallel with the released image container (dashhub on 48215).
 #===============================================================================
 
 services:
@@ -17,4 +20,6 @@ services:
         # Build arguments (if needed)
         - NODE_ENV=production
     image: ghcr.io/devosduotech/dashhub:dev
-    container_name: dashhub
+    container_name: dashhub-dev
+    ports: !override
+      - "${HOST_PORT_DEV:-48216}:80"
