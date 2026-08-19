@@ -79,53 +79,53 @@ OSDuo DashHub provides:
 - Docker & Docker Compose
 - Glances on each monitored server (optional)
 
-### Directory Structure
+### Quick Start (Docker - recommended)
 
-```
-dashhub/
-├── config/          # Configuration templates (default.yml)
-├── data/            # Persistent data (conf.yml, known_hosts.json, uploads/)
-├── docker/          # Docker-specific files
-├── src/             # Frontend source
-├── server/          # Backend source
-├── .env.example     # Environment template
-└── docker-compose.yml
+No Node.js, npm, or source code required. The published image is pulled from the GitHub Container Registry.
+
+```bash
+mkdir dashhub && cd dashhub
+mkdir data
+curl -O https://raw.githubusercontent.com/devosduotech/dashhub/v1/docker-compose.yml
+docker compose up -d
 ```
 
-See [STRUCTURE.md](./docs/project/STRUCTURE.md) for detailed documentation.
+Open http://localhost:48215
 
-### Installation
+The container stores its persistent configuration in `./data/` (`conf.yml`, `known_hosts.json`). To upgrade:
 
-1. **Clone the repository**
-   ```bash
-   git clone https://github.com/osduo/dashhub.git
-   cd dashhub
-   ```
+```bash
+docker compose pull && docker compose up -d
+```
 
-2. **Setup environment**
-   ```bash
-   cp .env.example .env
-   # Edit .env if needed (defaults work for most cases)
-   ```
+### Alternative: run the image directly
 
-3. **Initialize configuration** (optional - UI can do this)
-   ```bash
-   cp config/default.yml data/conf.yml
-   ```
+```bash
+docker run -d \
+  --name dashhub \
+  -p 48215:80 \
+  -v "$PWD/data":/app/data \
+  --restart unless-stopped \
+  ghcr.io/devosduotech/dashhub:1.0.1
+```
 
-4. **Build and start**
-   ```bash
-   docker compose up -d --build
-   ```
+### Option 3: build from source (developers/contributors)
 
-5. **Access dashboard**
-   Open http://localhost:48215
+```bash
+git clone https://github.com/devosduotech/dashhub.git
+cd dashhub
+cp .env.example .env
+docker compose -f docker-compose.yml -f docker-compose.dev.yml up -d --build
+```
 
-6. **Configure via UI**
-   - Click "Edit Mode" (pencil icon)
-   - Add widgets from palette
-   - Configure each widget via settings
-   - Save configuration (auto-saves to data/conf.yml)
+Open http://localhost:48215
+
+### Configuration via UI
+
+- Click "Edit Mode" (pencil icon)
+- Add widgets from palette
+- Configure each widget via settings
+- Save configuration (auto-saves to data/conf.yml)
 
 See [Deployment Guide](./docs/deployment.md) for detailed setup instructions.
 

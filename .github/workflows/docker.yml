@@ -1,0 +1,128 @@
+name: Build & Publish Docker Image
+
+on:
+  push:
+    tags:
+      - 'v*'
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'Image version tag (e.g. 1.0.1)'
+        required: false
+        default: '1.0.1'
+
+permissions:
+  contents: read
+  packages: write
+
+concurrency:
+  group: docker-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  test:
+    name: Test & Build
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js 24
+        uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Type check
+        run: npm run typecheck
+
+      - name: Lint
+        run: npm run lint
+
+      - name: Run tests
+        run: npm test
+
+      - name: Production build
+        run: npm run build
+
+  docker:
+    name: Build, Smoke Test & Publish
+    needs: test
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up QEMU (multi-arch)
+        uses: docker/setup-qemu-action@v3
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Log in to GHCR
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Generate image metadata
+        id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: ghcr.io/${{ github.repository }}
+          tags: |
+            type=semver,pattern={{version}}
+            type=raw,value=${{ inputs.version }},enable=${{ github.event_name == 'workflow_dispatch' }}
+            type=raw,value=latest,enable=${{ startsWith(github.ref, 'refs/tags/v') || github.event_name == 'workflow_dispatch' }}
+          labels: |
+            org.opencontainers.image.title=DashHub
+            org.opencontainers.image.description=Local-first self-hosted dashboard
+            org.opencontainers.image.vendor=OSDuo Tech
+
+      - name: Build image (smoke test)
+        id: build-smoke
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          load: true
+          push: false
+          platforms: linux/amd64
+          tags: ghcr.io/${{ github.repository }}:smoke
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+      - name: Run smoke test
+        run: |
+          set -euo pipefail
+          SMOKE_DIR=$(mktemp -d)
+          docker run -d --name dashhub-smoke --rm \
+            -p 8080:80 \
+            -v "$SMOKE_DIR":/app/data \
+            ghcr.io/${{ github.repository }}:smoke
+          for i in $(seq 1 45); do
+            status=$(docker inspect -f '{{.State.Health.Status}}' dashhub-smoke 2>/dev/null || echo starting)
+            if [ "$status" = "healthy" ]; then break; fi
+            sleep 2
+          done
+          docker inspect -f '{{.State.Health.Status}}' dashhub-smoke | grep -q healthy
+          curl -fsS http://127.0.0.1:8080/api/config >/dev/null
+          test -f "$SMOKE_DIR/conf.yml"
+          test -f "$SMOKE_DIR/known_hosts.json" || true
+          docker exec dashhub-smoke id dashhub | grep -q 'uid=.*dashhub'
+          docker exec dashhub-smoke ps aux | grep -q 'node server.js'
+          docker stop dashhub-smoke >/dev/null
+
+      - name: Build and push multi-arch image
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          push: true
+          platforms: linux/amd64,linux/arm64
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max

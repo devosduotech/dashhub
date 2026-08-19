@@ -1,16 +1,21 @@
 #===============================================================================
-# OSDuo DashHub - Docker Compose Configuration
+# OSDuo DashHub - Docker Compose Configuration (pre-built image)
+#
+# End-user installation: pulls the published image from GHCR. No build required.
 #
 # Directory Structure:
-#   config/     - Configuration templates (default.yml)
-#   data/       - Persistent data (conf.yml, known_hosts.json, uploads/)
-#   .env        - Environment variables (copy from .env.example)
+#   data/   - Persistent data (conf.yml, known_hosts.json, uploads/)
+#   .env    - Environment variables (optional, defaults work out of the box)
 #
 # Usage:
-#   1. cp .env.example .env          # Customize environment variables
-#   2. cp config/default.yml data/conf.yml  # Or edit via UI
-#   3. docker compose up -d --build
-#   4. Access: http://localhost:${HOST_PORT}
+#   1. mkdir data
+#   2. docker compose up -d
+#   3. Access: http://localhost:${HOST_PORT}
+#
+# Upgrade:
+#   docker compose pull && docker compose up -d
+#
+# Developers: use docker-compose.dev.yml to build from source instead.
 #===============================================================================
 
 services:
@@ -22,12 +27,7 @@ services:
   #   - SSH Bridge: Native ssh2 library (no GoTTY required)
   #============================================================
   dashhub:
-    build:
-      context: .
-      dockerfile: Dockerfile
-      args:
-        # Build arguments (if needed)
-        - NODE_ENV=production
+    image: ghcr.io/devosduotech/dashhub:1.0.1
     container_name: dashhub
     restart: unless-stopped
 
@@ -39,14 +39,8 @@ services:
     volumes:
       # Configuration file (persisted)
       - ./data:/app/data
-      # Optional: Mount custom config template
-      # - ./config/custom.yml:/app/config/custom.yml:ro
 
-    # Environment variables from .env file
-    env_file:
-      - .env
-
-    # Additional environment variables
+    # Environment variables (defaults work; override via .env)
     environment:
       - NODE_ENV=${NODE_ENV:-production}
       - API_PORT=${API_PORT:-48231}
@@ -73,16 +67,6 @@ services:
     networks:
       - dashhub-network
 
-    # Resource limits (optional)
-    # deploy:
-    #   resources:
-    #     limits:
-    #       cpus: '1.0'
-    #       memory: 512M
-    #     reservations:
-    #       cpus: '0.25'
-    #       memory: 128M
-
 #===============================================================================
 # Network Configuration
 #===============================================================================
@@ -90,12 +74,3 @@ networks:
   dashhub-network:
     driver: bridge
     name: dashhub-network
-
-#===============================================================================
-# Volume Definitions (if using named volumes)
-#===============================================================================
-# volumes:
-#   dashhub-data:
-#     name: dashhub-data
-#   dashhub-config:
-#     name: dashhub-config

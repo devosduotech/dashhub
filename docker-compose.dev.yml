@@ -1,0 +1,20 @@
+#===============================================================================
+# OSDuo DashHub - Developer Compose Override (build from source)
+#
+# Usage (from the repository root):
+#   docker compose -f docker-compose.yml -f docker-compose.dev.yml up -d --build
+#
+# Merges with docker-compose.yml; overrides the pre-built GHCR image with a
+# local build so developers can work against the current source tree.
+#===============================================================================
+
+services:
+  dashhub:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      args:
+        # Build arguments (if needed)
+        - NODE_ENV=production
+    image: ghcr.io/devosduotech/dashhub:dev
+    container_name: dashhub
