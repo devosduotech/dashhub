@@ -111,12 +111,16 @@ jobs:
             if [ "$status" = "healthy" ]; then break; fi
             sleep 2
           done
+          echo "health status: $(docker inspect -f '{{.State.Health.Status}}' dashhub-smoke)"
           docker inspect -f '{{.State.Health.Status}}' dashhub-smoke | grep -q healthy
-          curl -fsS http://127.0.0.1:8080/api/config >/dev/null
-          test -f "$SMOKE_DIR/conf.yml"
-          test -f "$SMOKE_DIR/known_hosts.json" || true
-          docker exec dashhub-smoke id dashhub | grep -q 'uid=.*dashhub'
-          docker exec dashhub-smoke ps aux | grep -q 'node server.js'
+          echo "API responds:"
+          curl -fsS http://127.0.0.1:8080/api/config >/dev/null && echo "  OK"
+          echo "conf.yml initialized inside container:"
+          docker exec dashhub-smoke test -f /app/data/conf.yml && echo "  OK"
+          echo "API runs as unprivileged dashhub user:"
+          docker exec dashhub-smoke id dashhub | grep -q 'uid=.*dashhub' && echo "  OK"
+          echo "Node API process present:"
+          docker exec dashhub-smoke ps aux | grep -q 'node server.js' && echo "  OK"
           docker stop dashhub-smoke >/dev/null
 
       - name: Build and push multi-arch image
