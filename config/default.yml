@@ -1,0 +1,240 @@
+# OSDuo DashHub Configuration Template
+# Copy this to data/conf.yml and customize
+
+appConfig:
+  title: "OSDuo DashHub"
+  theme: dark-navy
+  language: en
+  iconSet: material
+  defaultPage: 0
+
+pages:
+  # ============================================================
+  # PAGE 1: Dashboard Overview
+  # ============================================================
+  - name: "Dashboard"
+    icon: dashboard
+    items:
+      # Quick Links Widget
+      - type: quick-links
+        title: "Quick Links"
+        config:
+          columns: 4
+          displayMode: grid
+          links:
+            - title: "Home Assistant"
+              url: "https://ha.local:8123"
+              icon: "home"
+              description: "Home automation"
+              target: newtab
+              category: "Smart Home"
+
+            - title: "Portainer"
+              url: "https://portainer.local:9000"
+              icon: "docker"
+              description: "Container management"
+              target: newtab
+              category: "Infrastructure"
+
+            - title: "Plex Media"
+              url: "https://plex.local:32400"
+              icon: "play"
+              description: "Media server"
+              target: newtab
+              category: "Media"
+
+            - title: "Router"
+              url: "http://192.168.1.1"
+              icon: "router"
+              description: "Network router"
+              target: newtab
+              category: "Network"
+
+            - title: "NAS"
+              url: "https://nas.local"
+              icon: "storage"
+              description: "Network storage"
+              target: newtab
+              category: "Storage"
+
+            - title: "Grafana"
+              url: "http://grafana.local:3000"
+              icon: "chart"
+              description: "Metrics dashboard"
+              target: newtab
+              category: "Monitoring"
+
+            - title: "Prometheus"
+              url: "http://prometheus.local:9090"
+              icon: "database"
+              description: "Metrics collection"
+              target: newtab
+              category: "Monitoring"
+
+            - title: "Uptime Kuma"
+              url: "http://kuma.local:3001"
+              icon: "clock"
+              description: "Uptime monitoring"
+              target: newtab
+              category: "Monitoring"
+
+  # ============================================================
+  # PAGE 2: Production Servers (Example: Customer A)
+  # ============================================================
+  - name: "Production - Customer A"
+    icon: building
+    items:
+      # Server 1 - Using iframe to embed Glances web UI
+      - type: glances
+        title: "Web Server 01"
+        config:
+          url: "http://192.168.1.10:61208"  # Glances web interface URL
+          displayMode: embedded
+          height: 400
+          ssh:
+            enabled: true
+            host: "192.168.1.10"
+            port: 22
+            username: "admin"
+
+      # Server 2
+      - type: glances
+        title: "Database Server 01"
+        config:
+          url: "http://192.168.1.11:61208"
+          displayMode: embedded
+          height: 400
+          ssh:
+            enabled: true
+            host: "192.168.1.11"
+            port: 22
+            username: "admin"
+
+      # Server 3
+      - type: glances
+        title: "App Server 01"
+        config:
+          url: "http://192.168.1.12:61208"
+          displayMode: embedded
+          height: 400
+          ssh:
+            enabled: true
+            host: "192.168.1.12"
+            port: 22
+            username: "deploy"
+
+  # ============================================================
+  # PAGE 3: Development Servers
+  # ============================================================
+  - name: "Development"
+    icon: code
+    items:
+      - type: glances
+        title: "Dev Server 01"
+        config:
+          url: "http://192.168.2.10:61208"
+          displayMode: embedded
+          height: 400
+          ssh:
+            enabled: true
+            host: "192.168.2.10"
+            username: "dev"
+
+      - type: glances
+        title: "Staging Server 01"
+        config:
+          url: "http://192.168.2.11:61208"
+          displayMode: embedded
+          height: 400
+          ssh:
+            enabled: true
+            host: "192.168.2.11"
+            username: "deploy"
+
+  # ============================================================
+  # PAGE 4: Internal Infrastructure
+  # ============================================================
+  - name: "Infrastructure"
+    icon: server
+    items:
+      - type: glances
+        title: "NAS Server"
+        config:
+          url: "http://192.168.1.100:61208"
+          displayMode: embedded
+          height: 400
+          ssh:
+            enabled: true
+            host: "192.168.1.100"
+            username: "admin"
+
+      - type: glances
+        title: "Backup Server"
+        config:
+          url: "http://192.168.1.101:61208"
+          displayMode: embedded
+          height: 400
+          ssh:
+            enabled: true
+            host: "192.168.1.101"
+            username: "backup"
+
+      - type: glances
+        title: "VPN Server"
+        config:
+          url: "http://192.168.1.102:61208"
+          displayMode: embedded
+          height: 300
+          ssh:
+            enabled: true
+            host: "192.168.1.102"
+            username: "admin"
+
+  # ============================================================
+  # PAGE 5: Media & Feeds
+  # ============================================================
+  - name: "Media & Feeds"
+    icon: video
+    items:
+      # YouTube Widget
+      - type: youtube
+        title: "Tech YouTube"
+        config:
+          channels:
+            - id: "UCXuqSBlHAE6Xw-yeJA0Tunw"
+              name: "Linus Tech Tips"
+            - id: "UCR-DXc1voovS8nhAvccRZhg"
+              name: "Jeff Geerling"
+            - id: "UCBJycsmduvYEL83R_U4JriQ"
+              name: "Marques Brownlee"
+            - id: "UCsBjURrPoezykLs9EqgamOA"
+              name: "Fireship"
+          videosPerChannel: 4
+          displayMode: grid
+          thumbnailSize: medium
+          cacheTime: 60
+
+      # RSS Feeds Widget
+      - type: rss
+        title: "Tech News"
+        config:
+          feeds:
+            - url: "https://news.ycombinator.com/rss"
+              title: "Hacker News"
+              icon: "hacker-news"
+              group: "Tech"
+            - url: "https://www.theverge.com/rss/index.xml"
+              title: "The Verge"
+              icon: "news"
+              group: "Tech"
+            - url: "https://feeds.arstechnica.com/arstechnica/index"
+              title: "Ars Technica"
+              icon: "tech"
+              group: "Tech"
+            - url: "https://dev.to/feed"
+              title: "DEV Community"
+              icon: "code"
+              group: "Development"
+          itemsPerFeed: 5
+          showThumbnails: true
+          cacheTime: 15

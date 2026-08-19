@@ -1,0 +1,46 @@
+@use 'variables' as v;
+
+body {
+  margin: 0;
+  background-color: var(--color-bg, #0f1729);
+  color: var(--color-text, #e2e8f0);
+  font-family: v.$font-sans;
+  font-size: v.$font-base;
+  line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+a {
+  color: var(--color-primary-hover, #60a5fa);
+  text-decoration: none;
+
+  &:hover {
+    text-decoration: underline;
+  }
+}
+
+button {
+  font-family: inherit;
+  font-size: inherit;
+  cursor: pointer;
+}
+
+input,
+textarea,
+select {
+  font-family: inherit;
+  font-size: inherit;
+}
+
+// Keyboard focus indicator (mouse clicks and keyboard-triggered :focus are
+// distinguished by the browser; :focus-visible only fires for keyboard/AT input)
+:focus-visible {
+  outline: 2px solid var(--color-primary, #3b82f6);
+  outline-offset: 2px;
+  border-radius: 2px;
+}
