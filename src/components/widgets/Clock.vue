@@ -21,6 +21,7 @@ const props = defineProps<{
 const timeZone = computed(() => props.config?.['timeZone'] as string || '')
 const hideDate = computed(() => props.config?.['hideDate'] === true)
 const hideSeconds = computed(() => props.config?.['hideSeconds'] === true)
+const use12Hour = computed(() => props.config?.['use12Hour'] === true)
 
 function getDisplayDate(): Date {
   if (timeZone.value) {
@@ -37,12 +38,17 @@ function formatTime(date: Date): string {
   const h = date.getHours()
   const m = date.getMinutes()
   const s = date.getSeconds()
-  const suffix = h >= 12 ? 'PM' : 'AM'
-  const h12 = h % 12 || 12
   const mm = String(m).padStart(2, '0')
   const ss = String(s).padStart(2, '0')
-  if (hideSeconds.value) return `${h12}:${mm} ${suffix}`
-  return `${h12}:${mm}:${ss} ${suffix}`
+  if (use12Hour.value) {
+    const suffix = h >= 12 ? 'PM' : 'AM'
+    const h12 = h % 12 || 12
+    if (hideSeconds.value) return `${h12}:${mm} ${suffix}`
+    return `${h12}:${mm}:${ss} ${suffix}`
+  }
+  const hh = String(h).padStart(2, '0')
+  if (hideSeconds.value) return `${hh}:${mm}`
+  return `${hh}:${mm}:${ss}`
 }
 
 function formatDate(date: Date): string {
