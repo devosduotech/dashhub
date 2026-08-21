@@ -10,6 +10,12 @@ export type WidgetType =
   | 'latest-versions'
   | 'notes'
   | 'status-indicators'
+  | 'speedtest'
+
+export type SpeedtestServer =
+  | 'cloudflare'
+  | 'dashhub'
+  | 'custom'
 
 export type DisplayMode = 'embedded' | 'link' | 'compact'
 export type OpenTarget = 'newtab' | 'sametab' | 'modal'
@@ -202,4 +208,11 @@ export interface StatusIndicatorsWidgetConfig extends WidgetConfig {
   showLatency?: boolean
   showStatusCode?: boolean
   refreshInterval?: number
+}
+
+export interface SpeedtestWidgetConfig extends WidgetConfig {
+  server?: SpeedtestServer
+  customBaseUrl?: string
+  testDuration?: number
+  parallelStreams?: number
 }

@@ -580,5 +580,6 @@ export const WIDGET_ICONS: Record<string, IconName> = {
   'public-ip': 'public-ip',
   'latest-versions': 'latest-versions',
   notes: 'notes',
-  'status-indicators': 'status-indicators'
+  'status-indicators': 'status-indicators',
+  speedtest: 'bolt'
 }

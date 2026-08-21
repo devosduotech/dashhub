@@ -1,5 +1,6 @@
 import express from 'express'
 import cors from 'cors'
+import crypto from 'crypto'
 import http from 'http'
 import path from 'path'
 import { fileURLToPath } from 'url'
@@ -197,6 +198,60 @@ app.post('/api/status-check', async (req, res) => {
   } catch (err) {
     const latency = err.name === 'AbortError' ? timeout * 1000 : undefined
     res.json({ ok: false, status: 0, latency, error: err.name === 'AbortError' ? 'timeout' : err.message })
+  }
+})
+
+// ─── Speedtest endpoints ───────────────────────────────────────────
+
+app.get('/api/speedtest/ping', (_req, res) => {
+  res.json({ ts: Date.now() })
+})
+
+app.get('/api/speedtest/download', (req, res) => {
+  const bytes = Math.min(Math.max(parseInt(req.query.bytes) || 1048576, 1), 52428800)
+  res.setHeader('Content-Type', 'application/octet-stream')
+  res.setHeader('Content-Length', bytes)
+  res.setHeader('Cache-Control', 'no-store')
+  let sent = 0
+  const chunk = Buffer.allocUnsafe(65536)
+  crypto.randomFillSync(chunk)
+  function sendChunk() {
+    if (sent >= bytes) return res.end()
+    const toSend = Math.min(chunk.length, bytes - sent)
+    res.write(toSend === chunk.length ? chunk : chunk.subarray(0, toSend))
+    sent += toSend
+    setImmediate(sendChunk)
+  }
+  sendChunk()
+})
+
+app.post('/api/speedtest/upload', express.raw({ limit: '50mb', type: '*/*' }), (req, res) => {
+  res.json({ bytesReceived: req.body ? req.body.length : 0 })
+})
+
+app.all('/api/speedtest/proxy', async (req, res) => {
+  try {
+    const targetUrl = req.query.url
+    if (!targetUrl || typeof targetUrl !== 'string') {
+      return sendError(res, 400, 'MISSING_URL', 'Missing url parameter')
+    }
+    const parsed = new URL(targetUrl)
+    if (!['http:', 'https:'].includes(parsed.protocol)) {
+      return sendError(res, 400, 'INVALID_PROTOCOL', 'Only http/https URLs allowed')
+    }
+    const response = await fetch(targetUrl, { method: req.method, redirect: 'follow' })
+    const contentType = response.headers.get('content-type') || 'application/octet-stream'
+    res.setHeader('Content-Type', contentType)
+    res.setHeader('Access-Control-Allow-Origin', '*')
+    if (contentType.includes('text') || contentType.includes('json')) {
+      const text = await response.text()
+      res.send(text)
+    } else {
+      const buffer = Buffer.from(await response.arrayBuffer())
+      res.send(buffer)
+    }
+  } catch (err) {
+    sendError(res, 502, 'PROXY_FAILED', err instanceof Error ? err.message : 'Proxy request failed')
   }
 })
 

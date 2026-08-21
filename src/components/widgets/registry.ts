@@ -111,6 +111,15 @@ export const widgetRegistry: Record<WidgetType, WidgetDefinition> = {
     settingsForm: () => import('@/components/widgets/StatusIndicatorsSettingsForm.vue'),
     defaultConfig: () => ({ endpoints: [], showLatency: false, showStatusCode: false, refreshInterval: 1800 })
   },
+  speedtest: {
+    type: 'speedtest',
+    label: 'Speedtest',
+    icon: '⚡',
+    description: 'Network speed test (ping, download, upload)',
+    component: () => import('@/components/widgets/SpeedtestWidget.vue'),
+    settingsForm: () => import('@/components/widgets/SpeedtestSettingsForm.vue'),
+    defaultConfig: () => ({ server: 'cloudflare', customBaseUrl: '', testDuration: 10, parallelStreams: 4 })
+  },
 }
 
 export const widgetList = Object.values(widgetRegistry)
