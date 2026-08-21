@@ -8,6 +8,8 @@ export type WidgetType =
   | 'clock'
   | 'public-ip'
   | 'latest-versions'
+  | 'notes'
+  | 'status-indicators'
 
 export type DisplayMode = 'embedded' | 'link' | 'compact'
 export type OpenTarget = 'newtab' | 'sametab' | 'modal'
@@ -118,7 +120,7 @@ export interface GlancesWidgetConfig extends WidgetConfig {
 
 export interface QuickLinksWidgetConfig extends WidgetConfig {
   columns?: number
-  displayMode?: 'grid' | 'list'
+  displayMode?: 'grid' | 'list' | 'bar'
   links: QuickLink[]
 }
 
@@ -168,5 +170,36 @@ export interface IframeWidgetConfig extends WidgetConfig {
   width?: string | number
   fullWidth?: boolean
   allowFullscreen?: boolean
+  refreshInterval?: number
+}
+
+export interface NoteItem {
+  id: string
+  text: string
+  completed: boolean
+  priority?: 'low' | 'medium' | 'high'
+  createdAt: string
+}
+
+export interface NotesWidgetConfig extends WidgetConfig {
+  items: NoteItem[]
+  displayMode?: 'notes' | 'reminders'
+  showCompleted?: boolean
+  sortBy?: 'created' | 'priority'
+}
+
+export interface StatusEndpoint {
+  name: string
+  url: string
+  method?: 'GET' | 'HEAD' | 'OPTIONS'
+  expectedStatus?: number
+  timeout?: number
+  category?: string
+}
+
+export interface StatusIndicatorsWidgetConfig extends WidgetConfig {
+  endpoints: StatusEndpoint[]
+  showLatency?: boolean
+  showStatusCode?: boolean
   refreshInterval?: number
 }

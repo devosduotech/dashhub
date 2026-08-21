@@ -10,7 +10,8 @@ const CONFIG_FILE = path.join(CONFIG_DIR, 'conf.yml')
 const DEFAULT_CONFIG_FILE = path.resolve(__dirname, '../../config/default.yml')
 
 const VALID_WIDGET_TYPES = new Set([
-  'quick-links', 'glances', 'ssh', 'youtube', 'rss', 'iframe', 'clock', 'public-ip', 'latest-versions'
+  'quick-links', 'glances', 'ssh', 'youtube', 'rss', 'iframe', 'clock', 'public-ip', 'latest-versions',
+  'notes', 'status-indicators'
 ])
 
 const VALID_AUTH_TYPES = new Set(['password', 'key', 'agent'])

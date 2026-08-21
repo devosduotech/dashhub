@@ -38,10 +38,26 @@ function getTarget(target?: string): string {
       <p v-if="editMode" class="hint">Click the gear icon above to add links.</p>
     </div>
 
-    <div v-else class="links-container" :class="{ 'list-mode': displayMode === 'list' }">
+    <div v-else class="links-container" :class="{ 'list-mode': displayMode === 'list', 'bar-mode': displayMode === 'bar' }">
       <div v-for="(groupLinks, category) in groupedLinks" :key="category" class="link-group">
-        <div v-if="Object.keys(groupedLinks).length > 1" class="group-title">{{ category }}</div>
-        <div class="link-grid" :style="{ gridTemplateColumns: displayMode === 'list' ? '1fr' : `repeat(${columns}, 1fr)` }">
+        <div v-if="Object.keys(groupedLinks).length > 1 && displayMode !== 'bar'" class="group-title">{{ category }}</div>
+        <div v-if="displayMode === 'bar'" class="link-bar">
+          <a
+            v-for="(link, i) in links"
+            :key="i"
+            :href="link.url"
+            :target="getTarget(link.target)"
+            rel="noopener noreferrer"
+            class="link-pill"
+          >
+            <span class="link-icon" v-if="isImageIcon(link.icon)">
+              <img :src="link.icon" :alt="link.title" class="link-icon-img" @error="($event.target as HTMLImageElement).style.display = 'none'" />
+            </span>
+            <span class="link-icon" v-else><AppIcon :name="safeIconName(link.icon)" :size="16" /></span>
+            <span v-if="link.title" class="link-pill-title">{{ link.title }}</span>
+          </a>
+        </div>
+        <div v-else class="link-grid" :style="{ gridTemplateColumns: displayMode === 'list' ? '1fr' : `repeat(${columns}, 1fr)` }">
           <a
             v-for="(link, i) in groupLinks"
             :key="i"
@@ -167,6 +183,48 @@ function getTarget(target?: string): string {
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
+}
+
+.link-bar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.link-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.375rem;
+  padding: 0.375rem 0.75rem;
+  background-color: var(--color-bg-elevated);
+  border: 1px solid var(--color-border);
+  border-radius: 999px;
+  text-decoration: none;
+  color: var(--color-text);
+  transition: all 150ms ease;
+  white-space: nowrap;
+
+  &:hover {
+    background-color: var(--color-bg-hover);
+    border-color: var(--color-primary);
+    text-decoration: none;
+  }
+}
+
+.link-pill .link-icon {
+  font-size: 1rem;
+  width: auto;
+  flex-shrink: 0;
+}
+
+.link-pill .link-icon-img {
+  width: 1.125rem;
+  height: 1.125rem;
+}
+
+.link-pill-title {
+  font-size: 0.8125rem;
+  font-weight: 500;
 }
 
 .list-item {

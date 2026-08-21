@@ -27,9 +27,13 @@ const WidgetComponent = def ? defineAsyncComponent({
 const SettingsForm = def ? defineAsyncComponent(def.settingsForm) : null
 
 const draftTitle = ref(props.item.title)
-const draftConfig = ref<WidgetConfig>({})
+const draftConfig = ref<WidgetConfig>(JSON.parse(JSON.stringify(props.item.config)))
 
 function openSettings() {
+  store.updateWidget(props.pageIndex, props.item.id, {
+    title: props.item.title,
+    config: draftConfig.value
+  })
   draftTitle.value = props.item.title
   draftConfig.value = JSON.parse(JSON.stringify(props.item.config))
   showSettings.value = true
@@ -91,8 +95,9 @@ function refresh() {
       <component
         v-if="WidgetComponent"
         :is="WidgetComponent"
-        :config="item.config"
+        :config="draftConfig"
         :edit-mode="store.editMode"
+        @update="updateDraftConfig"
       />
       <div v-else class="widget-error">
         Unknown widget type: {{ item.type }}

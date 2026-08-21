@@ -106,6 +106,8 @@ export type IconName =
   | 'tag'
   | 'public-ip'
   | 'latest-versions'
+  | 'notes'
+  | 'status-indicators'
 
 export const ICONS: Record<IconName, IconPart[]> = {
   dashboard: [
@@ -554,6 +556,16 @@ export const ICONS: Record<IconName, IconPart[]> = {
     { t: 'path', d: 'M16 7V4a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v3' },
     { t: 'path', d: 'M12 12v4' },
     { t: 'path', d: 'M10 16h4' }
+  ],
+  notes: [
+    { t: 'path', d: 'M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2' },
+    { t: 'rect', x: 8, y: 2, w: 8, h: 4, rx: 1 },
+    { t: 'path', d: 'M9 12h6' },
+    { t: 'path', d: 'M9 16h6' }
+  ],
+  'status-indicators': [
+    { t: 'circle', cx: 12, cy: 12, r: 10 },
+    { t: 'circle', cx: 12, cy: 12, r: 4 }
   ]
 }
 
@@ -566,5 +578,7 @@ export const WIDGET_ICONS: Record<string, IconName> = {
   iframe: 'iframe',
   clock: 'clock',
   'public-ip': 'public-ip',
-  'latest-versions': 'latest-versions'
+  'latest-versions': 'latest-versions',
+  notes: 'notes',
+  'status-indicators': 'status-indicators'
 }

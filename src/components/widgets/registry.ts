@@ -93,6 +93,24 @@ export const widgetRegistry: Record<WidgetType, WidgetDefinition> = {
     settingsForm: () => import('@/components/widgets/PublicIpSettingsForm.vue'),
     defaultConfig: () => ({ provider: 'ipinfo', useProxy: false, hideLocation: false })
   },
+  notes: {
+    type: 'notes',
+    label: 'Notes & Reminders',
+    icon: '📝',
+    description: 'Personal notes and task reminders',
+    component: () => import('@/components/widgets/NotesWidget.vue'),
+    settingsForm: () => import('@/components/widgets/NotesSettingsForm.vue'),
+    defaultConfig: () => ({ items: [], displayMode: 'reminders', showCompleted: true, sortBy: 'created' })
+  },
+  'status-indicators': {
+    type: 'status-indicators',
+    label: 'Status Indicators',
+    icon: '🟢',
+    description: 'Monitor endpoint health status',
+    component: () => import('@/components/widgets/StatusIndicatorsWidget.vue'),
+    settingsForm: () => import('@/components/widgets/StatusIndicatorsSettingsForm.vue'),
+    defaultConfig: () => ({ endpoints: [], showLatency: false, showStatusCode: false, refreshInterval: 1800 })
+  },
 }
 
 export const widgetList = Object.values(widgetRegistry)

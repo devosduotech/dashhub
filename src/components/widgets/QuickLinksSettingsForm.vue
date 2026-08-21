@@ -68,6 +68,31 @@ function updateDisplayMode(value: string) {
   emit('update', { ...props.config, displayMode: value })
 }
 
+const dragIndex = ref(-1)
+const dragOverIndex = ref(-1)
+
+function onDragStart(index: number) {
+  dragIndex.value = index
+}
+
+function onDragOver(index: number, event: DragEvent) {
+  event.preventDefault()
+  dragOverIndex.value = index
+}
+
+function onDragEnd() {
+  if (dragIndex.value >= 0 && dragOverIndex.value >= 0 && dragIndex.value !== dragOverIndex.value) {
+    const cfg = { ...getConfig() }
+    const items = [...cfg.links]
+    const [moved] = items.splice(dragIndex.value, 1)
+    items.splice(dragOverIndex.value, 0, moved)
+    cfg.links = items
+    emit('update', { ...props.config, links: cfg.links })
+  }
+  dragIndex.value = -1
+  dragOverIndex.value = -1
+}
+
 function onIconSelected(value: string) {
   editLink.value.icon = value
   showIconPicker.value = false
@@ -93,6 +118,7 @@ function onIconSelected(value: string) {
         <select :value="getConfig().displayMode || 'grid'" class="form-select" @change="updateDisplayMode(($event.target as HTMLSelectElement).value)">
           <option value="grid">Grid</option>
           <option value="list">List</option>
+          <option value="bar">Bar</option>
         </select>
       </div>
     </div>
@@ -157,7 +183,16 @@ function onIconSelected(value: string) {
         <div v-if="!getConfig().links || getConfig().links.length === 0" class="empty-hint">
           No links yet. Click "Add Link" to create one.
         </div>
-        <div v-for="(link, index) in (getConfig().links || [])" :key="index" class="link-item">
+        <div
+          v-for="(link, index) in (getConfig().links || [])"
+          :key="index"
+          class="link-item"
+          :class="{ 'drag-over': dragOverIndex === index }"
+          draggable="true"
+          @dragstart="onDragStart(index)"
+          @dragover="onDragOver(index, $event)"
+          @dragend="onDragEnd"
+        >
           <span class="link-icon" v-if="isImageIcon(link.icon)">
             <img :src="link.icon" :alt="link.title" class="link-icon-img" @error="($event.target as HTMLImageElement).style.display = 'none'" />
           </span>
@@ -278,6 +313,16 @@ function onIconSelected(value: string) {
   background-color: var(--color-surface);
   border: 1px solid var(--color-border);
   border-radius: 6px;
+  cursor: grab;
+
+  &:active {
+    cursor: grabbing;
+  }
+
+  &.drag-over {
+    border-color: var(--color-primary);
+    background-color: var(--color-primary-dim);
+  }
 }
 
 .link-icon {

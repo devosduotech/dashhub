@@ -177,6 +177,29 @@ app.post('/api/public-ip', async (req, res) => {
   }
 })
 
+app.post('/api/status-check', async (req, res) => {
+  const { url, method = 'GET', timeout = 5, expectedStatus = 200 } = req.body || {}
+  if (!url) return sendError(res, 400, 'MISSING_URL', 'URL is required')
+  try {
+    const controller = new AbortController()
+    const timer = setTimeout(() => controller.abort(), timeout * 1000)
+    const start = Date.now()
+    const response = await fetch(url, {
+      method: method.toUpperCase(),
+      signal: controller.signal,
+      redirect: 'follow'
+    })
+    clearTimeout(timer)
+    const latency = Date.now() - start
+    const status = response.status
+    const ok = status === expectedStatus
+    res.json({ ok, status, latency })
+  } catch (err) {
+    const latency = err.name === 'AbortError' ? timeout * 1000 : undefined
+    res.json({ ok: false, status: 0, latency, error: err.name === 'AbortError' ? 'timeout' : err.message })
+  }
+})
+
 app.use((err, req, res, _next) => {
   if (err.type === 'entity.too.large') {
     return sendError(res, 413, 'REQUEST_TOO_LARGE', 'Request payload exceeds the maximum allowed size')
