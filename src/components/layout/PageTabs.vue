@@ -10,6 +10,7 @@ const renamingIndex = ref(-1)
 const newName = ref('')
 const iconPickerIndex = ref(-1)
 const settingsPageIndex = ref(-1)
+const dragOverIndex = ref(-1)
 
 function selectPage(index: number) {
   if (iconPickerIndex.value === index) {
@@ -71,6 +72,39 @@ function updatePageSettings(updates: { name: string; icon: string; columnCount?:
   })
   settingsPageIndex.value = -1
 }
+
+let dragIndex = -1
+
+function onDragStart(e: DragEvent, index: number) {
+  dragIndex = index
+  e.dataTransfer!.effectAllowed = 'move'
+  e.dataTransfer!.setData('text/plain', String(index))
+}
+
+function onDragOver(e: DragEvent, index: number) {
+  e.preventDefault()
+  e.dataTransfer!.dropEffect = 'move'
+  dragOverIndex.value = index
+}
+
+function onDragLeave() {
+  dragOverIndex.value = -1
+}
+
+function onDrop(e: DragEvent, toIndex: number) {
+  e.preventDefault()
+  const fromIndex = dragIndex
+  dragIndex = -1
+  dragOverIndex.value = -1
+  if (fromIndex >= 0 && fromIndex !== toIndex) {
+    store.reorderPages(fromIndex, toIndex)
+  }
+}
+
+function onDragEnd() {
+  dragIndex = -1
+  dragOverIndex.value = -1
+}
 </script>
 
 <template>
@@ -80,7 +114,17 @@ function updatePageSettings(updates: { name: string; icon: string; columnCount?:
         v-for="(page, index) in store.pages"
         :key="page.id || index"
         class="tab"
-        :class="{ active: index === store.activePageIndex }"
+        :class="{
+          active: index === store.activePageIndex,
+          'drag-over-before': store.editMode && dragOverIndex === index && dragIndex !== -1 && dragIndex > index,
+          'drag-over-after': store.editMode && dragOverIndex === index && dragIndex !== -1 && dragIndex < index
+        }"
+        :draggable="store.editMode"
+        @dragstart="onDragStart($event, index)"
+        @dragover="onDragOver($event, index)"
+        @dragleave="onDragLeave"
+        @drop="onDrop($event, index)"
+        @dragend="onDragEnd"
       >
         <button class="tab-main" :title="store.editMode ? page.name : 'Switch to ' + page.name" @click="selectPage(index)">
           <template v-if="!store.editMode">
@@ -196,6 +240,32 @@ function updatePageSettings(updates: { name: string; icon: string; columnCount?:
   &.active {
     color: var(--color-text);
     border-bottom-color: var(--color-primary);
+  }
+
+  &.drag-over-before {
+    &::before {
+      content: '';
+      position: absolute;
+      left: -2px;
+      top: 2px;
+      bottom: 2px;
+      width: 3px;
+      background-color: var(--color-primary);
+      border-radius: 2px;
+    }
+  }
+
+  &.drag-over-after {
+    &::after {
+      content: '';
+      position: absolute;
+      right: -2px;
+      top: 2px;
+      bottom: 2px;
+      width: 3px;
+      background-color: var(--color-primary);
+      border-radius: 2px;
+    }
   }
 }
 

@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, defineAsyncComponent, h } from 'vue'
+import { ref, computed, defineAsyncComponent, h } from 'vue'
 import type { PageItem, WidgetConfig } from '@/types/config'
 import { useConfigStore } from '@/stores/config'
 import { widgetRegistry } from './registry'
@@ -15,6 +15,7 @@ const emit = defineEmits<{ (e: 'refresh'): void }>()
 
 const store = useConfigStore()
 const showSettings = ref(false)
+const showMoveDropdown = ref(false)
 
 const def = widgetRegistry[props.item.type]
 const widgetIcon = WIDGET_ICONS[props.item.type] || 'dashboard'
@@ -62,6 +63,18 @@ function removeWidget() {
 function refresh() {
   emit('refresh')
 }
+
+function moveToPage(toPageIndex: number) {
+  store.moveWidgetBetweenPages(props.pageIndex, toPageIndex, props.item.id)
+  store.setActivePage(toPageIndex)
+  showMoveDropdown.value = false
+}
+
+const otherPages = computed(() => {
+  return store.pages
+    .map((page, index) => ({ page, index }))
+    .filter(({ index }) => index !== props.pageIndex)
+})
 </script>
 
 <template>
@@ -78,6 +91,21 @@ function refresh() {
           title="Settings"
           @click="openSettings"
         ><AppIcon name="settings" :size="15" /></button>
+        <div v-if="store.editMode && otherPages.length > 0" class="move-dropdown-wrapper">
+          <button
+            class="widget-btn"
+            title="Move to page"
+            @click="showMoveDropdown = !showMoveDropdown"
+          ><AppIcon name="external-link" :size="15" /></button>
+          <div v-if="showMoveDropdown" class="move-dropdown">
+            <button
+              v-for="{ page, index } in otherPages"
+              :key="page.id"
+              class="move-option"
+              @click="moveToPage(index)"
+            >{{ page.name }}</button>
+          </div>
+        </div>
         <button
           class="widget-btn"
           title="Refresh"
@@ -191,6 +219,43 @@ function refresh() {
 .widget-actions {
   display: flex;
   gap: 0.125rem;
+  align-items: center;
+}
+
+.move-dropdown-wrapper {
+  position: relative;
+}
+
+.move-dropdown {
+  position: absolute;
+  top: 100%;
+  right: 0;
+  margin-top: 0.25rem;
+  background-color: var(--color-bg-elevated);
+  border: 1px solid var(--color-border);
+  border-radius: 6px;
+  padding: 0.25rem;
+  min-width: 140px;
+  z-index: 100;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+}
+
+.move-option {
+  display: block;
+  width: 100%;
+  padding: 0.375rem 0.75rem;
+  background: none;
+  border: none;
+  border-radius: 4px;
+  color: var(--color-text);
+  font-size: 0.8125rem;
+  text-align: left;
+  cursor: pointer;
+  white-space: nowrap;
+
+  &:hover {
+    background-color: var(--color-bg-hover);
+  }
 }
 
 .widget-btn {

@@ -179,9 +179,28 @@ export const useConfigStore = defineStore('config', () => {
   function reorderPages(from: number, to: number) {
     if (from < 0 || from >= pages.value.length) return
     if (to < 0 || to >= pages.value.length) return
-    const temp = pages.value[from]
-    pages.value[from] = pages.value[to]
-    pages.value[to] = temp
+    if (from === to) return
+    const page = pages.value.splice(from, 1)[0]
+    pages.value.splice(to, 0, page)
+    if (activePageIndex.value === from) {
+      activePageIndex.value = to
+    } else if (from < activePageIndex.value && to >= activePageIndex.value) {
+      activePageIndex.value--
+    } else if (from > activePageIndex.value && to <= activePageIndex.value) {
+      activePageIndex.value++
+    }
+    debouncedSave()
+  }
+
+  function moveWidgetBetweenPages(fromPageIndex: number, toPageIndex: number, itemId: string) {
+    if (fromPageIndex < 0 || fromPageIndex >= pages.value.length) return
+    if (toPageIndex < 0 || toPageIndex >= pages.value.length) return
+    if (fromPageIndex === toPageIndex) return
+    const fromItems = pages.value[fromPageIndex].items
+    const idx = fromItems.findIndex(i => i.id === itemId)
+    if (idx < 0) return
+    const item = fromItems.splice(idx, 1)[0]
+    pages.value[toPageIndex].items.push(item)
     debouncedSave()
   }
 
@@ -278,6 +297,7 @@ export const useConfigStore = defineStore('config', () => {
     updatePage,
     deletePage,
     reorderPages,
+    moveWidgetBetweenPages,
     addWidget,
     removeWidget,
     moveWidget,
