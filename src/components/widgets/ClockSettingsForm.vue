@@ -15,9 +15,10 @@
       <label for="format">Format</label>
       <select id="format" v-model="format">
         <option value="">Default</option>
-        <option value="HH:mm:ss A">12-hour (HH:mm:ss A)</option>
-        <option value="HH:mm:ss">24-hour (HH:mm:ss)</option>
-        <option value="h:mm a">12-hour (h:mm a)</option>
+        <option value="HH:mm:ss">HH:mm:ss</option>
+        <option value="HH:mm">HH:mm</option>
+        <option value="h:mm:ss A">h:mm:ss A</option>
+        <option value="h:mm A">h:mm A</option>
       </select>
     </div>
 
