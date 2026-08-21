@@ -66,14 +66,14 @@ export const widgetRegistry: Record<WidgetType, WidgetDefinition> = {
     settingsForm: () => import('@/components/widgets/IframeSettingsForm.vue'),
     defaultConfig: () => ({ url: '', height: 400, width: '100%', fullWidth: true, allowFullscreen: true, refreshInterval: 0 })
   },
-  'github-trending': {
-    type: 'github-trending',
-    label: 'GitHub Trending',
-    icon: '📊',
-    description: 'Trending repositories on GitHub',
-    component: () => import('@/components/widgets/GithubTrendingWidget.vue'),
-    settingsForm: () => import('@/components/widgets/GithubSettingsForm.vue'),
-    defaultConfig: () => ({ since: 'daily', language: '', stars: 0, limit: 5 })
+  'latest-versions': {
+    type: 'latest-versions',
+    label: 'Latest Versions',
+    icon: '📦',
+    description: 'Track latest package versions',
+    component: () => import('@/components/widgets/VersionsWidget.vue'),
+    settingsForm: () => import('@/components/widgets/VersionsSettingsForm.vue'),
+    defaultConfig: () => ({ items: [] })
   },
   clock: {
     type: 'clock',

@@ -7,7 +7,7 @@ export type WidgetType =
   | 'iframe'
   | 'clock'
   | 'public-ip'
-  | 'github-trending'
+  | 'latest-versions'
 
 export type DisplayMode = 'embedded' | 'link' | 'compact'
 export type OpenTarget = 'newtab' | 'sametab' | 'modal'
@@ -158,11 +158,8 @@ export interface PublicIpWidgetConfig extends WidgetConfig {
   hideLocation?: boolean
 }
 
-export interface GithubTrendingWidgetConfig extends WidgetConfig {
-  since?: 'daily' | 'weekly' | 'monthly'
-  language?: string
-  stars?: number
-  limit?: number
+export interface LatestVersionsWidgetConfig extends WidgetConfig {
+  items?: Array<{ name: string; source: 'npm' | 'github' | 'pypi'; identifier: string }>
 }
 
 export interface IframeWidgetConfig extends WidgetConfig {

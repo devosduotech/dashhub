@@ -42,16 +42,15 @@
 import { computed } from 'vue'
 
 const emit = defineEmits<{
-  'update:config': [config: Record<string, unknown>]
+  (e: 'update', config: Record<string, unknown>): void
 }>()
 
 const props = defineProps<{
   config: Record<string, unknown>
 }>()
 
-// Emit updated config
 function updateConfig(newConfig: Record<string, unknown>) {
-  emit('update:config', { ...props.config, ...newConfig })
+  emit('update', { ...props.config, ...newConfig })
 }
 
 const timeZone = computed({
@@ -81,34 +80,17 @@ const use12Hour = computed({
 </script>
 
 <style scoped>
-.form-group {
-  margin-bottom: 12px;
+.form-group { margin-bottom: 12px; }
+.form-group label { display: block; margin-bottom: 4px; font-size: 12px; color: var(--color-text-muted); }
+.form-group.row { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px; }
+.checkbox-wrapper { display: flex; align-items: center; gap: 4px; }
+select, input[type="checkbox"] {
+  padding: 0.5rem 0.75rem;
+  background-color: var(--color-bg);
+  border: 1px solid var(--color-border);
+  border-radius: 6px;
+  color: var(--color-text);
+  font-size: 0.875rem;
 }
-
-.form-group label {
-  display: block;
-  margin-bottom: 4px;
-  font-size: 12px;
-  color: var(--widget-text-color-secondary, var(--text-color));
-}
-
-.form-group.row {
-  display: grid;
-  grid-template-columns: 1fr 1fr 1fr;
-  gap: 8px;
-}
-
-.checkbox-wrapper {
-  display: flex;
-  align-items: center;
-  gap: 4px;
-}
-
-select {
-  padding: 4px 8px;
-  border: 1px solid var(--border-color, #ccc);
-  border-radius: 4px;
-  background-color: var(--input-bg-color, #fff);
-  color: var(--input-text-color, var(--text-color));
-}
+select:focus { outline: none; border-color: var(--color-primary); }
 </style>

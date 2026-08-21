@@ -26,8 +26,7 @@ const props = defineProps<{
 }>()
 
 // Config defaults
-const provider = computed(() => props.config?.['provider'] as string || 'ipinfo')
-const useProxy = computed(() => props.config?.['useProxy'] === true)
+const provider = computed(() => props.config?.['provider'] as string || 'ip-api')
 const hideLocation = computed(() => props.config?.['hideLocation'] === true)
 
 // State
@@ -39,7 +38,7 @@ const loading = ref<boolean>(false)
 async function refreshIp() {
   loading.value = true
   try {
-    const result = await fetchPublicIp(provider.value, useProxy.value)
+    const result = await fetchPublicIp(provider.value)
     ipAddress.value = result.ip
     location.value = result.location || ''
   } catch (error) {

@@ -145,7 +145,39 @@ app.get('/api/youtube/feed', async (req, res) => {
   }
 })
 
-app.use((err, req, res, next) => {
+app.post('/api/public-ip', async (req, res) => {
+  const provider = req.body?.provider || 'ip-api'
+  const PROXY_PROVIDERS = {
+    'ip-api': 'http://ip-api.com/json/?fields=query,city,regionName,country',
+    'ipapi': 'https://ipapi.co/json/',
+    'freeipapi': 'https://freeipapi.com/api/json',
+    'ipquery': 'https://ipquery.io/api'
+  }
+  const url = PROXY_PROVIDERS[provider] || PROXY_PROVIDERS['ip-api']
+  try {
+    const r = await fetch(url)
+    if (!r.ok) throw new Error(`HTTP ${r.status}`)
+    const d = await r.json()
+    let ip, location
+    if (provider === 'ip-api') {
+      ip = d.query; location = `${d.city}, ${d.regionName}, ${d.country}`
+    } else if (provider === 'ipapi') {
+      ip = d.ip; location = `${d.city}, ${d.region}, ${d.country_name}`
+    } else if (provider === 'freeipapi') {
+      ip = d.ip; location = `${d.cityName}, ${d.regionName}, ${d.countryName}`
+    } else if (provider === 'ipquery') {
+      ip = d.ip; location = `${d.city}, ${d.region}, ${d.country}`
+    } else {
+      ip = d.ip || d.query; location = ''
+    }
+    res.json({ ip, location })
+  } catch (err) {
+    console.error(`[public-ip] fetch failed for ${provider}:`, err.message)
+    sendError(res, 502, 'IP_FETCH_FAILED', `Unable to fetch IP from ${provider}`)
+  }
+})
+
+app.use((err, req, res, _next) => {
   if (err.type === 'entity.too.large') {
     return sendError(res, 413, 'REQUEST_TOO_LARGE', 'Request payload exceeds the maximum allowed size')
   }
