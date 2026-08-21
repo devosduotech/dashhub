@@ -1,6 +1,7 @@
 import fs from 'fs'
 import os from 'os'
 import path from 'path'
+import { generateKeyPairSync } from 'crypto'
 import { describe, it, expect, beforeAll, afterAll, afterEach, vi } from 'vitest'
 import { WebSocket } from 'ws'
 import request from 'supertest'
@@ -87,12 +88,15 @@ function sshConfigWith(port, connId = 'conn-host') {
 // --- Real SSH host used to exercise the bridge's host-key verification -----
 
 function generateHostKey() {
-  return utils.generateKeyPairSync('ed25519')
+  const kp = utils.generateKeyPairSync('ed25519')
+  const key = kp.private
+  if (typeof key === 'string') return key
+  return key.export({ type: 'openssh', format: 'pem' })
 }
 
 function startSshHost(port = 0) {
   return new Promise((resolve, reject) => {
-    const srv = new SshServer({ hostKeys: [generateHostKey().private] }, (client) => {
+    const srv = new SshServer({ hostKeys: [generateHostKey()] }, (client) => {
       // The bridge's host-key probe deliberately aborts the handshake; swallow
       // the resulting server-side disconnect so it does not become an unhandled error.
       client.on('error', () => {})
