@@ -5,6 +5,9 @@ export type WidgetType =
   | 'youtube'
   | 'rss'
   | 'iframe'
+  | 'clock'
+  | 'public-ip'
+  | 'github-trending'
 
 export type DisplayMode = 'embedded' | 'link' | 'compact'
 export type OpenTarget = 'newtab' | 'sametab' | 'modal'
@@ -139,6 +142,27 @@ export interface RssWidgetConfig extends WidgetConfig {
   itemsPerFeed?: number
   showThumbnails?: boolean
   cacheTime?: number
+}
+
+export interface ClockWidgetConfig extends WidgetConfig {
+  timeZone?: string
+  format?: string
+  hideDate?: boolean
+  hideSeconds?: boolean
+  use12Hour?: boolean
+}
+
+export interface PublicIpWidgetConfig extends WidgetConfig {
+  provider?: 'ipinfo' | 'freeipapi' | 'ipquery' | 'ip-api' | 'ipgeolocation'
+  useProxy?: boolean
+  hideLocation?: boolean
+}
+
+export interface GithubTrendingWidgetConfig extends WidgetConfig {
+  since?: 'daily' | 'weekly' | 'monthly'
+  language?: string
+  stars?: number
+  limit?: number
 }
 
 export interface IframeWidgetConfig extends WidgetConfig {

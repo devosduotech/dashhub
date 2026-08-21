@@ -104,6 +104,8 @@ export type IconName =
   | 'network'
   | 'flag'
   | 'tag'
+  | 'public-ip'
+  | 'github-trending'
 
 export const ICONS: Record<IconName, IconPart[]> = {
   dashboard: [
@@ -541,6 +543,15 @@ export const ICONS: Record<IconName, IconPart[]> = {
   tag: [
     { t: 'path', d: 'M12.586 2.586A2 2 0 0 0 11.172 2H4a2 2 0 0 0-2 2v7.172a2 2 0 0 0 .586 1.414l8.704 8.704a2.426 2.426 0 0 0 3.42 0l6.58-6.58a2.426 2.426 0 0 0 0-3.42z' },
     { t: 'circle', cx: 7.5, cy: 7.5, r: 0.5, fill: true }
+  ],
+  'public-ip': [
+    { t: 'circle', cx: 12, cy: 12, r: 10 },
+    { t: 'path', d: 'M2 12h20' },
+    { t: 'path', d: 'M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z' }
+  ],
+  'github-trending': [
+    { t: 'path', d: 'M3 3v18h18' },
+    { t: 'path', d: 'm19 9-5 5-4-4-3 3' }
   ]
 }
 
@@ -550,5 +561,8 @@ export const WIDGET_ICONS: Record<string, IconName> = {
   ssh: 'terminal',
   youtube: 'youtube',
   rss: 'rss',
-  iframe: 'iframe'
+  iframe: 'iframe',
+  clock: 'clock',
+  'public-ip': 'public-ip',
+  'github-trending': 'github-trending'
 }

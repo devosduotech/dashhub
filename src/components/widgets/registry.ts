@@ -66,6 +66,33 @@ export const widgetRegistry: Record<WidgetType, WidgetDefinition> = {
     settingsForm: () => import('@/components/widgets/IframeSettingsForm.vue'),
     defaultConfig: () => ({ url: '', height: 400, width: '100%', fullWidth: true, allowFullscreen: true, refreshInterval: 0 })
   },
+  'github-trending': {
+    type: 'github-trending',
+    label: 'GitHub Trending',
+    icon: '📊',
+    description: 'Trending repositories on GitHub',
+    component: () => import('@/components/widgets/GithubTrendingWidget.vue'),
+    settingsForm: () => import('@/components/widgets/GithubSettingsForm.vue'),
+    defaultConfig: () => ({ since: 'daily', language: '', stars: 0, limit: 5 })
+  },
+  clock: {
+    type: 'clock',
+    label: 'Clock',
+    icon: '⏰',
+    description: 'Live-updating time and date',
+    component: () => import('@/components/widgets/Clock.vue'),
+    settingsForm: () => import('@/components/widgets/ClockSettingsForm.vue'),
+    defaultConfig: () => ({ timeZone: '', format: '', hideDate: false, hideSeconds: false, use12Hour: false })
+  },
+  'public-ip': {
+    type: 'public-ip',
+    label: 'Public IP',
+    icon: '🌐',
+    description: 'Public IP address and location',
+    component: () => import('@/components/widgets/PublicIpWidget.vue'),
+    settingsForm: () => import('@/components/widgets/PublicIpSettingsForm.vue'),
+    defaultConfig: () => ({ provider: 'ipinfo', useProxy: false, hideLocation: false })
+  },
 }
 
 export const widgetList = Object.values(widgetRegistry)

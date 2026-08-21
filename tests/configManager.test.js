@@ -153,7 +153,7 @@ describe('validateConfig', () => {
 
   it('rejects an unknown widget type', () => {
     const cfg = baseConfig()
-    cfg.pages[0].items[0].type = 'clock'
+    cfg.pages[0].items[0].type = 'nonexistent-widget'
     const { valid, errors } = validateConfig(cfg)
     expect(valid).toBe(false)
     expect(errors.join(' ')).toContain('not a valid widget type')
