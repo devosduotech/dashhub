@@ -153,6 +153,7 @@ onUnmounted(() => {
 <style scoped lang="scss">
 .uptime-widget {
   padding: 1rem;
+  padding-right: 2.75rem;
   position: relative;
 }
 
