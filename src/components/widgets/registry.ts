@@ -138,6 +138,15 @@ export const widgetRegistry: Record<WidgetType, WidgetDefinition> = {
     settingsForm: () => import('@/components/widgets/UptimeSettingsForm.vue'),
     defaultConfig: () => ({ endpoints: [], checkInterval: 300 })
   },
+  calendar: {
+    type: 'calendar',
+    label: 'Calendar',
+    icon: '📅',
+    description: 'CalDAV calendar events',
+    component: () => import('@/components/widgets/CalendarWidget.vue'),
+    settingsForm: () => import('@/components/widgets/CalendarSettingsForm.vue'),
+    defaultConfig: () => ({ serverUrl: '', username: '', password: '', calendarUrl: '', displayName: '', displayMode: 'upcoming', eventCount: 10, refreshInterval: 15 })
+  },
 }
 
 export const widgetList = Object.values(widgetRegistry)

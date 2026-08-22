@@ -18,6 +18,7 @@ import { UPLOADS_DIR, listUploads, saveUpload, deleteUpload, MAX_UPLOAD_SIZE } f
 import { getChannelVideos, isValidChannelId } from './youtube.js'
 import { getFeedItems, isValidFeedUrl } from './rss.js'
 import { getHistory as getUptimeHistory, appendResults as appendUptimeResults } from './uptimeStore.js'
+import { discoverCalendars, fetchEvents } from './caldavClient.js'
 
 const app = express()
 const PORT = process.env.API_PORT || 48231
@@ -253,6 +254,36 @@ app.all('/api/speedtest/proxy', async (req, res) => {
     }
   } catch (err) {
     sendError(res, 502, 'PROXY_FAILED', err instanceof Error ? err.message : 'Proxy request failed')
+  }
+})
+
+// --- CalDAV calendar endpoints ---
+
+app.post('/api/caldav/discover', express.json({ limit: '1mb' }), async (req, res) => {
+  try {
+    const { baseUrl, username, password } = req.body
+    if (!baseUrl || !username || !password) {
+      return sendError(res, 400, 'MISSING_FIELDS', 'baseUrl, username, and password are required')
+    }
+    const calendars = await discoverCalendars(baseUrl, username, password)
+    res.json({ calendars })
+  } catch (err) {
+    sendError(res, 502, 'CALDAV_DISCOVER_FAILED', err instanceof Error ? err.message : 'Discovery failed')
+  }
+})
+
+app.post('/api/caldav/events', express.json({ limit: '1mb' }), async (req, res) => {
+  try {
+    const { baseUrl, username, password, calendarUrl, start, end } = req.body
+    if (!baseUrl || !username || !password || !calendarUrl) {
+      return sendError(res, 400, 'MISSING_FIELDS', 'baseUrl, username, password, and calendarUrl are required')
+    }
+    const startDate = start ? new Date(start) : new Date()
+    const endDate = end ? new Date(end) : new Date(Date.now() + 30 * 24 * 60 * 60 * 1000)
+    const events = await fetchEvents(baseUrl, username, password, calendarUrl, startDate, endDate)
+    res.json({ events })
+  } catch (err) {
+    sendError(res, 502, 'CALDAV_EVENTS_FAILED', err instanceof Error ? err.message : 'Failed to fetch events')
   }
 })
 

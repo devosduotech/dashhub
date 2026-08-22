@@ -16,19 +16,33 @@ const props = defineProps<{
 
 const emit = defineEmits<{ (e: 'close'): void }>()
 
-const termContainer = ref<HTMLElement | null>(null)
-const statusMsg = ref<string>('Connecting...')
-const connected = ref(false)
-const errorMsg = ref<string | null>(null)
-const hostKeyPrompt = ref<{ host: string; port: number; fingerprint: string } | null>(null)
-const tabs = ref<{ id: number; name: string }[]>([{ id: 0, name: props.conn.name }])
-const activeTab = ref(0)
+interface TabState {
+  id: number
+  name: string
+  containerEl: HTMLElement | null
+  term: Terminal | null
+  fitAddon: FitAddon | null
+  ws: WebSocket | null
+  resizeObserver: ResizeObserver | null
+  resizeTimer: ReturnType<typeof setTimeout> | null
+  connected: boolean
+  statusMsg: string
+  errorMsg: string | null
+  hostKeyPrompt: { host: string; port: number; fingerprint: string } | null
+}
 
-let term: Terminal | null = null
-let fitAddon: FitAddon | null = null
-let ws: WebSocket | null = null
-let resizeTimer: ReturnType<typeof setTimeout> | null = null
-let resizeObserver: ResizeObserver | null = null
+const tabs = ref<TabState[]>([])
+const activeTabId = ref(0)
+let tabIdCounter = 0
+
+const modalWidth = ref(900)
+const modalHeight = ref(600)
+const STORAGE_KEY = 'dashhub-terminal-size'
+let resizing = false
+let resizeStartX = 0
+let resizeStartY = 0
+let resizeStartW = 0
+let resizeStartH = 0
 
 const THEMES: Record<string, Record<string, string>> = {
   monokai: {
@@ -53,216 +67,282 @@ const THEMES: Record<string, Record<string, string>> = {
   }
 }
 
-function getWsUrl(conn: SshConnection): string {
+function getWsUrl(): string {
   const proto = window.location.protocol === 'https:' ? 'wss:' : 'ws:'
   const host = window.location.host
-  const connId = encodeURIComponent(conn.id || conn.name)
+  const connId = encodeURIComponent(props.conn.id || props.conn.name)
   return `${proto}//${host}/api/ssh?id=${connId}&cols=80&rows=24`
 }
 
-function acceptHostKey() {
-  if (ws && ws.readyState === WebSocket.OPEN) {
-    ws.send(JSON.stringify({ type: 'host-key-accept' }))
-  }
-  hostKeyPrompt.value = null
+function getTheme() {
+  return THEMES[props.theme || 'monokai'] || THEMES.monokai
 }
 
-function rejectHostKey() {
-  if (ws && ws.readyState === WebSocket.OPEN) {
-    ws.send(JSON.stringify({ type: 'host-key-reject' }))
-  }
-  hostKeyPrompt.value = null
+function initTerminal(tab: TabState) {
+  if (!tab.containerEl) return
+  const term = new Terminal({
+    fontSize: props.fontSize || 14,
+    fontFamily: 'JetBrains Mono, Fira Code, Cascadia Code, Menlo, Consolas, monospace',
+    cursorBlink: true,
+    theme: getTheme(),
+    cols: 80,
+    rows: 24
+  })
+  const fitAddon = new FitAddon()
+  term.loadAddon(fitAddon)
+  term.loadAddon(new WebLinksAddon())
+  term.open(tab.containerEl)
+  try { fitAddon.fit() } catch { /* ignore */ }
+
+  tab.term = term
+  tab.fitAddon = fitAddon
+
+  term.onData((data) => {
+    if (tab.ws && tab.ws.readyState === WebSocket.OPEN) {
+      tab.ws.send(JSON.stringify({ type: 'input', data }))
+    }
+  })
+
+  tab.resizeObserver = new ResizeObserver(() => {
+    if (tab.resizeTimer) clearTimeout(tab.resizeTimer)
+    tab.resizeTimer = setTimeout(() => {
+      tab.fitAddon?.fit()
+      if (tab.term && tab.ws && tab.ws.readyState === WebSocket.OPEN) {
+        tab.ws.send(JSON.stringify({ type: 'resize', cols: tab.term.cols, rows: tab.term.rows }))
+      }
+    }, 100)
+  })
+  tab.resizeObserver.observe(tab.containerEl)
+
+  tab.term.write('Connecting...\r\n')
+  connectTab(tab)
 }
 
-function connect() {
-  if (!term) return
-  const url = getWsUrl(props.conn)
-  ws = new WebSocket(url)
+function connectTab(tab: TabState) {
+  if (!tab.term) return
+  const ws = new WebSocket(getWsUrl())
+  tab.ws = ws
 
   ws.onmessage = (ev) => {
     try {
       const msg = JSON.parse(ev.data)
       if (msg.type === 'connected') {
-        connected.value = true
-        statusMsg.value = ''
-        term?.write(`\r\n\x1b[32mConnected to ${msg.host}:${msg.port}\x1b[0m\r\n\r\n`)
+        tab.connected = true
+        tab.statusMsg = ''
+        tab.term?.write(`\r\n\x1b[32mConnected to ${msg.host}:${msg.port}\x1b[0m\r\n\r\n`)
       } else if (msg.type === 'data') {
-        term?.write(msg.data)
+        tab.term?.write(msg.data)
       } else if (msg.type === 'error') {
-        errorMsg.value = msg.message
-        statusMsg.value = msg.message
-        term?.write(`\r\n\x1b[31m${msg.message}\x1b[0m\r\n`)
+        tab.errorMsg = msg.message
+        tab.statusMsg = msg.message
+        tab.term?.write(`\r\n\x1b[31m${msg.message}\x1b[0m\r\n`)
       } else if (msg.type === 'host-key') {
-        hostKeyPrompt.value = { host: msg.host, port: msg.port, fingerprint: msg.fingerprint }
-        statusMsg.value = 'Host key verification required'
-        term?.write(`\r\n\x1b[33mHost authenticity cannot be established.\r\nPlease review the fingerprint below.\x1b[0m\r\n`)
+        tab.hostKeyPrompt = { host: msg.host, port: msg.port, fingerprint: msg.fingerprint }
+        tab.statusMsg = 'Host key verification required'
+        tab.term?.write(`\r\n\x1b[33mHost authenticity cannot be established.\x1b[0m\r\n`)
       } else if (msg.type === 'closed') {
-        connected.value = false
-        statusMsg.value = 'Connection closed'
-        term?.write(`\r\n\x1b[33mConnection closed.\x1b[0m\r\n`)
+        tab.connected = false
+        tab.statusMsg = 'Connection closed'
+        tab.term?.write(`\r\n\x1b[33mConnection closed.\x1b[0m\r\n`)
       }
-    } catch (e) {
-      // ignore
-    }
+    } catch { /* ignore */ }
   }
-
   ws.onerror = () => {
-    errorMsg.value = 'WebSocket connection failed'
-    statusMsg.value = 'WebSocket error - cannot reach SSH bridge'
-    term?.write(`\r\n\x1b[31mCannot connect to SSH bridge. Is the API server running?\x1b[0m\r\n`)
+    tab.errorMsg = 'WebSocket connection failed'
+    tab.statusMsg = 'WebSocket error'
+    tab.term?.write(`\r\n\x1b[31mCannot connect to SSH bridge.\x1b[0m\r\n`)
   }
+  ws.onclose = () => { tab.connected = false }
+}
 
-  ws.onclose = () => {
-    connected.value = false
+function acceptHostKey(tab: TabState) {
+  if (tab.ws && tab.ws.readyState === WebSocket.OPEN) {
+    tab.ws.send(JSON.stringify({ type: 'host-key-accept' }))
+  }
+  tab.hostKeyPrompt = null
+}
+
+function rejectHostKey(tab: TabState) {
+  if (tab.ws && tab.ws.readyState === WebSocket.OPEN) {
+    tab.ws.send(JSON.stringify({ type: 'host-key-reject' }))
+  }
+  tab.hostKeyPrompt = null
+}
+
+function disposeTab(tab: TabState) {
+  if (tab.ws) { tab.ws.close(); tab.ws = null }
+  if (tab.resizeObserver) { tab.resizeObserver.disconnect(); tab.resizeObserver = null }
+  if (tab.resizeTimer) { clearTimeout(tab.resizeTimer); tab.resizeTimer = null }
+  if (tab.term) { tab.term.dispose(); tab.term = null }
+}
+
+function closeTab(id: number) {
+  const idx = tabs.value.findIndex(t => t.id === id)
+  if (idx < 0) return
+  disposeTab(tabs.value[idx])
+  tabs.value.splice(idx, 1)
+  if (tabs.value.length === 0) { emit('close'); return }
+  if (activeTabId.value === id) {
+    const newIdx = Math.min(idx, tabs.value.length - 1)
+    switchTab(tabs.value[newIdx].id)
   }
 }
 
-function sendInput(data: string) {
-  if (ws && ws.readyState === WebSocket.OPEN) {
-    ws.send(JSON.stringify({ type: 'input', data }))
-  }
+function switchTab(id: number) {
+  activeTabId.value = id
+  nextTick(() => {
+    const tab = tabs.value.find(t => t.id === id)
+    if (tab?.fitAddon) { try { tab.fitAddon.fit() } catch { /* ignore */ } }
+  })
 }
 
-function sendResize() {
-  if (!term || !fitAddon) return
-  if (ws && ws.readyState === WebSocket.OPEN) {
-    ws.send(JSON.stringify({ type: 'resize', cols: term.cols, rows: term.rows }))
+async function newTab() {
+  const name = tabs.value.length === 0 ? props.conn.name : `${props.conn.name} #${tabs.value.length + 1}`
+  const container = document.createElement('div')
+  container.style.cssText = 'position:absolute;inset:0;padding:0.5rem;overflow:hidden;display:none;background:#1e1e1e;'
+  const body = document.querySelector('.terminal-body')
+  if (body) body.appendChild(container)
+
+  const tab: TabState = {
+    id: tabIdCounter++, name, containerEl: container,
+    term: null, fitAddon: null, ws: null, resizeObserver: null, resizeTimer: null,
+    connected: false, statusMsg: 'Connecting...', errorMsg: null, hostKeyPrompt: null
   }
+  tabs.value.push(tab)
+  activeTabId.value = tab.id
+  await nextTick()
+  initTerminal(tab)
 }
 
-function onResize() {
-  if (resizeTimer) clearTimeout(resizeTimer)
-  resizeTimer = setTimeout(() => {
-    fitAddon?.fit()
-    sendResize()
-  }, 100)
-}
-
-function closeTerminal() {
-  if (ws) {
-    ws.close()
-    ws = null
-  }
-  if (resizeObserver) {
-    resizeObserver.disconnect()
-    resizeObserver = null
-  }
-  if (term) {
-    term.dispose()
-    term = null
-  }
+function closeAllTabs() {
+  for (const tab of tabs.value) disposeTab(tab)
+  tabs.value = []
   emit('close')
 }
 
-function newTab() {
-  const id = tabs.value.length
-  tabs.value.push({ id, name: props.conn.name })
-  activeTab.value = id
-  term?.write('\r\n\x1b[33mMulti-tab support coming soon.\x1b[0m\r\n')
+function onResizeStart(e: MouseEvent) {
+  resizing = true
+  resizeStartX = e.clientX
+  resizeStartY = e.clientY
+  resizeStartW = modalWidth.value
+  resizeStartH = modalHeight.value
+  document.addEventListener('mousemove', onResizeMove)
+  document.addEventListener('mouseup', onResizeEnd)
+}
+
+function onResizeMove(e: MouseEvent) {
+  if (!resizing) return
+  modalWidth.value = Math.max(600, Math.min(window.innerWidth * 0.95, resizeStartW + (e.clientX - resizeStartX)))
+  modalHeight.value = Math.max(400, Math.min(window.innerHeight * 0.9, resizeStartH + (e.clientY - resizeStartY)))
+}
+
+function onResizeEnd() {
+  resizing = false
+  document.removeEventListener('mousemove', onResizeMove)
+  document.removeEventListener('mouseup', onResizeEnd)
+  localStorage.setItem(STORAGE_KEY, JSON.stringify({ w: modalWidth.value, h: modalHeight.value }))
+  const active = tabs.value.find(t => t.id === activeTabId.value)
+  if (active?.fitAddon) { try { active.fitAddon.fit() } catch { /* ignore */ } }
 }
 
 onMounted(async () => {
-  await nextTick()
-  if (!termContainer.value) return
-
-  const themeName = props.theme || 'monokai'
-  const theme = THEMES[themeName] || THEMES.monokai
-
-  term = new Terminal({
-    fontSize: props.fontSize || 14,
-    fontFamily: 'JetBrains Mono, Fira Code, Cascadia Code, Menlo, Consolas, monospace',
-    cursorBlink: true,
-    theme,
-    cols: 80,
-    rows: 24
-  })
-
-  fitAddon = new FitAddon()
-  term.loadAddon(fitAddon)
-  term.loadAddon(new WebLinksAddon())
-  term.open(termContainer.value)
-
-  try {
-    fitAddon.fit()
-  } catch (e) {
-    // ignore fit errors on initial mount
+  const saved = localStorage.getItem(STORAGE_KEY)
+  if (saved) {
+    try {
+      const { w, h } = JSON.parse(saved)
+      if (w && h) { modalWidth.value = w; modalHeight.value = h }
+    } catch { /* ignore */ }
   }
-
-  term.onData((data) => sendInput(data))
-
-  resizeObserver = new ResizeObserver(onResize)
-  resizeObserver.observe(termContainer.value)
-
-  term.write('Connecting...\r\n')
-  connect()
+  await nextTick()
+  const container = document.querySelector('.terminal-body')
+  if (!container) return
+  const tab: TabState = {
+    id: tabIdCounter++, name: props.conn.name,
+    containerEl: container as HTMLElement,
+    term: null, fitAddon: null, ws: null, resizeObserver: null, resizeTimer: null,
+    connected: false, statusMsg: 'Connecting...', errorMsg: null, hostKeyPrompt: null
+  }
+  tabs.value.push(tab)
+  activeTabId.value = tab.id
+  initTerminal(tab)
 })
 
 onBeforeUnmount(() => {
-  closeTerminal()
+  for (const tab of tabs.value) disposeTab(tab)
+  tabs.value = []
 })
 </script>
 
 <template>
   <Teleport to="body">
-    <div class="terminal-overlay" @click.self="closeTerminal">
-      <div class="terminal-modal">
+    <div class="terminal-overlay" @click.self="closeAllTabs">
+      <div class="terminal-modal" :style="{ width: modalWidth + 'px', height: modalHeight + 'px' }">
         <div class="terminal-header">
           <span class="terminal-title">
             {{ conn.name }} - {{ conn.username }}@{{ conn.host }}:{{ conn.port }}
           </span>
-          <span v-if="connected" class="terminal-status online">● Online</span>
-          <span v-else-if="errorMsg" class="terminal-status error">● Error</span>
+          <span v-if="tabs.find(t => t.id === activeTabId)?.connected" class="terminal-status online">● Online</span>
+          <span v-else-if="tabs.find(t => t.id === activeTabId)?.errorMsg" class="terminal-status error">● Error</span>
           <span v-else class="terminal-status connecting">● Connecting</span>
           <div class="terminal-header-actions">
             <button class="terminal-btn" title="New tab" @click="newTab"><AppIcon name="plus" :size="14" /></button>
-            <button class="terminal-btn" @click="closeTerminal" title="Close"><AppIcon name="close" :size="14" /></button>
+            <button class="terminal-btn" @click="closeAllTabs" title="Close"><AppIcon name="close" :size="14" /></button>
           </div>
         </div>
-        <div ref="termContainer" class="terminal-body"></div>
-        <div v-if="hostKeyPrompt" class="host-key-prompt">
-          <div class="host-key-content">
-            <div class="host-key-head">
-              <span class="host-key-shield"><AppIcon name="shield" :size="20" /></span>
-              <div>
-                <div class="host-key-title">Verify SSH Host</div>
-                <div class="host-key-subtitle">Host key verification required</div>
+        <div class="terminal-body">
+          <template v-for="tab in tabs" :key="tab.id">
+            <div
+              v-show="tab.id === activeTabId"
+              class="tab-pane"
+            ></div>
+            <div v-if="tab.id === activeTabId && tab.hostKeyPrompt" class="host-key-prompt">
+              <div class="host-key-content">
+                <div class="host-key-head">
+                  <span class="host-key-shield"><AppIcon name="shield" :size="20" /></span>
+                  <div>
+                    <div class="host-key-title">Verify SSH Host</div>
+                    <div class="host-key-subtitle">Host key verification required</div>
+                  </div>
+                </div>
+                <div class="host-key-conn">
+                  <span class="host-key-conn-name">{{ conn.name }}</span>
+                  <span class="host-key-detail">{{ tab.hostKeyPrompt.host }}:{{ tab.hostKeyPrompt.port }}</span>
+                </div>
+                <p class="host-key-explainer">
+                  The identity of this server could not be verified yet. Compare the
+                  fingerprint below with the one shown by your server administrator.
+                </p>
+                <div class="host-key-fingerprint">
+                  <span class="host-key-fp-label">SHA256 Fingerprint</span>
+                  <code>{{ tab.hostKeyPrompt.fingerprint }}</code>
+                </div>
+                <div class="host-key-actions">
+                  <button class="hk-btn hk-btn-danger" @click="rejectHostKey(tab)">Cancel</button>
+                  <button class="hk-btn hk-btn-primary" @click="acceptHostKey(tab)">
+                    <AppIcon name="shield-check" :size="14" />
+                    Accept and Save
+                  </button>
+                </div>
               </div>
             </div>
-            <div class="host-key-conn">
-              <span class="host-key-conn-name">{{ conn.name }}</span>
-              <span class="host-key-detail">{{ hostKeyPrompt.host }}:{{ hostKeyPrompt.port }}</span>
-            </div>
-            <p class="host-key-explainer">
-              The identity of this server could not be verified yet. Compare the
-              fingerprint below with the one shown by your server administrator.
-            </p>
-            <div class="host-key-fingerprint">
-              <span class="host-key-fp-label">SHA256 Fingerprint</span>
-              <code>{{ hostKeyPrompt.fingerprint }}</code>
-            </div>
-            <p class="host-key-note">
-              <AppIcon name="warning" :size="13" />
-              Verify this fingerprint before accepting the server's identity. Accepting stores it
-              in known_hosts for automatic verification on future connections.
-            </p>
-            <div class="host-key-actions">
-              <button class="hk-btn hk-btn-danger" @click="rejectHostKey">Cancel</button>
-              <button class="hk-btn hk-btn-primary" @click="acceptHostKey">
-                <AppIcon name="shield-check" :size="14" />
-                Accept and Save
-              </button>
-            </div>
-          </div>
+          </template>
         </div>
         <div class="terminal-footer">
           <span
             v-for="tab in tabs"
             :key="tab.id"
             class="terminal-tab"
-            :class="{ active: tab.id === activeTab }"
-            @click="activeTab = tab.id"
-          >Tab {{ tab.id + 1 }}: {{ tab.name }}</span>
+            :class="{ active: tab.id === activeTabId }"
+            @click="switchTab(tab.id)"
+          >
+            <span class="tab-dot" :class="{ online: tab.connected }"></span>
+            {{ tab.name }}
+            <button v-if="tabs.length > 1" class="tab-close" @click.stop="closeTab(tab.id)">
+              <AppIcon name="close" :size="10" />
+            </button>
+          </span>
         </div>
+        <div class="resize-handle" @mousedown="onResizeStart"></div>
       </div>
     </div>
   </Teleport>
@@ -277,19 +357,19 @@ onBeforeUnmount(() => {
   align-items: center;
   justify-content: center;
   z-index: 250;
-  padding: 2rem;
+  padding: 1rem;
 }
 
 .terminal-modal {
+  position: relative;
   background-color: #1e1e1e;
   border: 1px solid var(--color-border);
   border-radius: 12px;
-  width: 100%;
-  max-width: 900px;
-  height: 600px;
   display: flex;
   flex-direction: column;
   box-shadow: 0 10px 40px rgba(0, 0, 0, 0.7);
+  min-width: 600px;
+  min-height: 400px;
 }
 
 .terminal-header {
@@ -300,6 +380,7 @@ onBeforeUnmount(() => {
   background-color: var(--color-bg);
   border-bottom: 1px solid var(--color-border);
   border-radius: 12px 12px 0 0;
+  flex-shrink: 0;
 }
 
 .terminal-title {
@@ -316,7 +397,6 @@ onBeforeUnmount(() => {
 .terminal-status {
   font-size: 0.75rem;
   white-space: nowrap;
-
   &.online { color: var(--color-success); }
   &.connecting { color: var(--color-warning); }
   &.error { color: var(--color-danger); }
@@ -338,18 +418,21 @@ onBeforeUnmount(() => {
   padding: 0.25rem;
   border-radius: 4px;
   cursor: pointer;
-
-  &:hover {
-    background-color: var(--color-bg-hover);
-    color: var(--color-text);
-  }
+  &:hover { background-color: var(--color-bg-hover); color: var(--color-text); }
 }
 
 .terminal-body {
+  position: relative;
   flex: 1;
-  padding: 0.5rem;
   overflow: hidden;
   background-color: #1e1e1e;
+}
+
+.tab-pane {
+  position: absolute;
+  inset: 0;
+  padding: 0.5rem;
+  overflow: hidden;
 }
 
 .host-key-prompt {
@@ -376,11 +459,7 @@ onBeforeUnmount(() => {
   box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5);
 }
 
-.host-key-head {
-  display: flex;
-  align-items: center;
-  gap: 0.75rem;
-}
+.host-key-head { display: flex; align-items: center; gap: 0.75rem; }
 
 .host-key-shield {
   display: inline-flex;
@@ -394,43 +473,14 @@ onBeforeUnmount(() => {
   flex-shrink: 0;
 }
 
-.host-key-title {
-  font-weight: 600;
-  font-size: 0.9375rem;
-  color: var(--color-text);
-  line-height: 1.2;
-}
+.host-key-title { font-weight: 600; font-size: 0.9375rem; color: var(--color-text); }
+.host-key-subtitle { font-size: 0.75rem; color: var(--color-text-muted); }
 
-.host-key-subtitle {
-  font-size: 0.75rem;
-  color: var(--color-text-muted);
-}
+.host-key-conn { display: flex; align-items: baseline; gap: 0.5rem; }
+.host-key-conn-name { font-weight: 600; font-size: 0.875rem; color: var(--color-text); }
+.host-key-detail { font-family: var(--font-mono); font-size: 0.8125rem; color: var(--color-text-muted); }
 
-.host-key-conn {
-  display: flex;
-  align-items: baseline;
-  gap: 0.5rem;
-  flex-wrap: wrap;
-}
-
-.host-key-conn-name {
-  font-weight: 600;
-  font-size: 0.875rem;
-  color: var(--color-text);
-}
-
-.host-key-detail {
-  font-family: var(--font-mono);
-  font-size: 0.8125rem;
-  color: var(--color-text-muted);
-}
-
-.host-key-explainer {
-  margin: 0;
-  font-size: 0.8125rem;
-  color: var(--color-text-muted);
-  line-height: 1.5;
-}
+.host-key-explainer { margin: 0; font-size: 0.8125rem; color: var(--color-text-muted); line-height: 1.5; }
 
 .host-key-fingerprint {
   display: flex;
@@ -452,28 +502,12 @@ onBeforeUnmount(() => {
 }
 
 .host-key-fingerprint code {
-  font-family: var(--font-mono);
   font-size: 0.8125rem;
   color: var(--color-text);
   word-break: break-all;
 }
 
-.host-key-note {
-  display: flex;
-  align-items: flex-start;
-  gap: 0.375rem;
-  margin: 0;
-  font-size: 0.75rem;
-  color: var(--color-warning);
-  line-height: 1.4;
-}
-
-.host-key-actions {
-  display: flex;
-  justify-content: flex-end;
-  gap: 0.5rem;
-  margin-top: 0.25rem;
-}
+.host-key-actions { display: flex; justify-content: flex-end; gap: 0.5rem; margin-top: 0.25rem; }
 
 .hk-btn {
   display: inline-flex;
@@ -487,7 +521,6 @@ onBeforeUnmount(() => {
   border: 1px solid var(--color-border);
   color: var(--color-text);
   background-color: var(--color-surface);
-
   &:hover { background-color: var(--color-bg-hover); }
 }
 
@@ -495,18 +528,12 @@ onBeforeUnmount(() => {
   background-color: var(--color-primary);
   border-color: var(--color-primary);
   color: white;
-
   &:hover { background-color: var(--color-primary-hover); }
 }
 
 .hk-btn-danger {
   color: var(--color-text-muted);
-
   &:hover { background-color: var(--color-bg-hover); color: var(--color-text); }
-}
-
-.terminal-body :deep(.xterm) {
-  height: 100%;
 }
 
 .terminal-footer {
@@ -516,24 +543,59 @@ onBeforeUnmount(() => {
   background-color: var(--color-bg);
   border-top: 1px solid var(--color-border);
   border-radius: 0 0 12px 12px;
-  gap: 0.5rem;
+  gap: 0.375rem;
   overflow-x: auto;
+  flex-shrink: 0;
 }
 
 .terminal-tab {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.375rem;
   font-size: 0.75rem;
   color: var(--color-text-muted);
-  padding: 0.25rem 0.75rem;
+  padding: 0.25rem 0.625rem;
   background-color: var(--color-surface);
   border-radius: 4px;
   white-space: nowrap;
   cursor: pointer;
   border: 1px solid var(--color-border);
-
   &.active {
     color: var(--color-text);
     border-color: var(--color-primary);
     background-color: var(--color-primary-dim);
   }
+}
+
+.tab-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background-color: var(--color-text-dim);
+  &.online { background-color: var(--color-success); }
+}
+
+.tab-close {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: none;
+  border: none;
+  color: var(--color-text-muted);
+  padding: 0;
+  margin-left: 0.125rem;
+  cursor: pointer;
+  border-radius: 2px;
+  &:hover { color: var(--color-danger); background-color: rgba(255,255,255,0.1); }
+}
+
+.resize-handle {
+  position: absolute;
+  bottom: 0;
+  right: 0;
+  width: 16px;
+  height: 16px;
+  cursor: nwse-resize;
+  z-index: 20;
 }
 </style>

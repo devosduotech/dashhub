@@ -583,5 +583,6 @@ export const WIDGET_ICONS: Record<string, IconName> = {
   'status-indicators': 'status-indicators',
   speedtest: 'bolt',
   weather: 'cloud',
-  uptime: 'activity'
+  uptime: 'activity',
+  calendar: 'calendar'
 }

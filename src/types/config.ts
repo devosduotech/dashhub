@@ -13,6 +13,7 @@ export type WidgetType =
   | 'speedtest'
   | 'weather'
   | 'uptime'
+  | 'calendar'
 
 export type SpeedtestServer =
   | 'cloudflare'
@@ -236,4 +237,15 @@ export interface UptimeEndpoint {
 export interface UptimeWidgetConfig extends WidgetConfig {
   endpoints: UptimeEndpoint[]
   checkInterval: 60 | 300 | 900 | 1800
+}
+
+export interface CalendarWidgetConfig extends WidgetConfig {
+  serverUrl: string
+  username: string
+  password: string
+  calendarUrl: string
+  displayName: string
+  displayMode: 'upcoming' | 'month'
+  eventCount: number
+  refreshInterval: number
 }
