@@ -43,8 +43,9 @@ function parseSystemInfo(stdout) {
     } else if (trimmed.startsWith('DISK')) {
       const lines = trimmed.split('\n').slice(1)
       for (const line of lines) {
+        if (line.startsWith('Filesystem') || !line.trim()) continue
         const parts = line.split(/\s+/)
-        if (parts.length >= 6 && parts[1]) {
+        if (parts.length >= 6) {
           const total = parts[1]
           const used = parts[2]
           const percent = parseInt(parts[4]) || 0
@@ -83,16 +84,16 @@ export async function fetchSystemInfo(connId) {
   const cmd = [
     'echo "===CPU==="',
     'nproc',
-    'cat /proc/cpuinfo | grep "model name" | head -1',
-    'top -bn1 | head -5',
+    'cat /proc/cpuinfo 2>/dev/null | grep "model name" | head -1',
+    'top -bn1 2>/dev/null | head -5 || echo ""',
     'echo "===MEM==="',
     'free -m',
     'echo "===DISK==="',
-    'df -h --type=ext4 --type=xfs --type=btrfs 2>/dev/null || df -h',
+    'df -h 2>/dev/null | grep -E "^/|^Filesystem"',
     'echo "===NET==="',
-    'ip -brief addr show 2>/dev/null || ifconfig',
-    'cat /proc/net/dev | tail -n+3'
-  ].join(' && ')
+    'ip -brief addr show 2>/dev/null || ifconfig 2>/dev/null || echo ""',
+    'cat /proc/net/dev 2>/dev/null | tail -n+3 || echo ""'
+  ].join(' ; ')
 
   const stdout = await runSshCommand(connId, cmd)
   return parseSystemInfo(stdout)

@@ -19,7 +19,11 @@ const serviceNames = computed(() => (cfg.value.services || []).map(s => typeof s
 const serviceLabels = computed(() => {
   const map: Record<string, string> = {}
   for (const s of cfg.value.services || []) {
-    map[s.name] = s.label || s.name
+    if (typeof s === 'string') {
+      map[s] = s
+    } else {
+      map[s.name] = s.label || s.name
+    }
   }
   return map
 })

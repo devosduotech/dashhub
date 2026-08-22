@@ -58,6 +58,16 @@ onUnmounted(() => {
     <div v-if="!cfg.connectionId" class="empty-state">
       <AppIcon name="file" :size="32" class="empty-icon" />
       <p>Select a connection in widget settings</p>
+      <div class="help-text">
+        <p class="help-title">Setup Instructions:</p>
+        <ol>
+          <li>Add an SSH widget and configure a connection to your server</li>
+          <li>Select that connection in this widget's settings</li>
+          <li>Choose a service (nginx, docker, sshd, etc.) or leave blank for all</li>
+          <li>Set minimum priority level (Info recommended)</li>
+        </ol>
+        <p class="help-note">Requires systemd/journald on the remote server.</p>
+      </div>
     </div>
 
     <div v-else-if="error && entries.length === 0" class="error-state">
@@ -106,6 +116,14 @@ onUnmounted(() => {
   p { margin: 0; font-size: 0.8125rem; }
 }
 .empty-icon { color: var(--color-text-dim); }
+.help-text {
+  text-align: left; font-size: 0.75rem; color: var(--color-text-dim);
+  max-width: 280px; margin-top: 0.5rem;
+  ol { margin: 0.25rem 0; padding-left: 1.25rem; }
+  li { margin-bottom: 0.25rem; }
+}
+.help-title { font-weight: 600; color: var(--color-text-muted); margin-bottom: 0.25rem; }
+.help-note { font-style: italic; margin-top: 0.5rem; }
 .retry-btn {
   display: inline-flex; align-items: center; gap: 0.375rem;
   padding: 0.375rem 0.75rem; border: 1px solid var(--color-border);
