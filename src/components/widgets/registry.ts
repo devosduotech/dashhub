@@ -147,6 +147,15 @@ export const widgetRegistry: Record<WidgetType, WidgetDefinition> = {
     settingsForm: () => import('@/components/widgets/CalendarSettingsForm.vue'),
     defaultConfig: () => ({ serverUrl: '', username: '', password: '', calendarUrl: '', displayName: '', displayMode: 'upcoming', eventCount: 10, refreshInterval: 15 })
   },
+  'process-list': {
+    type: 'process-list',
+    label: 'Process List',
+    icon: '📊',
+    description: 'Monitor server processes via SSH',
+    component: () => import('@/components/widgets/ProcessListWidget.vue'),
+    settingsForm: () => import('@/components/widgets/ProcessListSettingsForm.vue'),
+    defaultConfig: () => ({ connectionId: '', refreshInterval: 10, sortBy: 'cpu', sortOrder: 'desc', maxProcesses: 25, filterText: '' })
+  },
 }
 
 export const widgetList = Object.values(widgetRegistry)

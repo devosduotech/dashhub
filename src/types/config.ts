@@ -14,6 +14,7 @@ export type WidgetType =
   | 'weather'
   | 'uptime'
   | 'calendar'
+  | 'process-list'
 
 export type SpeedtestServer =
   | 'cloudflare'
@@ -248,4 +249,13 @@ export interface CalendarWidgetConfig extends WidgetConfig {
   displayMode: 'upcoming' | 'month'
   eventCount: number
   refreshInterval: number
+}
+
+export interface ProcessListWidgetConfig extends WidgetConfig {
+  connectionId: string
+  refreshInterval: number
+  sortBy: 'cpu' | 'mem' | 'pid'
+  sortOrder: 'desc' | 'asc'
+  maxProcesses: number
+  filterText: string
 }

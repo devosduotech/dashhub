@@ -19,6 +19,7 @@ import { getChannelVideos, isValidChannelId } from './youtube.js'
 import { getFeedItems, isValidFeedUrl } from './rss.js'
 import { getHistory as getUptimeHistory, appendResults as appendUptimeResults } from './uptimeStore.js'
 import { discoverCalendars, fetchEvents } from './caldavClient.js'
+import { fetchProcesses } from './processClient.js'
 
 const app = express()
 const PORT = process.env.API_PORT || 48231
@@ -254,6 +255,26 @@ app.all('/api/speedtest/proxy', async (req, res) => {
     }
   } catch (err) {
     sendError(res, 502, 'PROXY_FAILED', err instanceof Error ? err.message : 'Proxy request failed')
+  }
+})
+
+// --- Process list endpoint ---
+
+app.get('/api/processes', async (req, res) => {
+  try {
+    const { connectionId, sortBy, sortOrder, maxProcesses } = req.query
+    if (!connectionId) {
+      return sendError(res, 400, 'MISSING_FIELDS', 'connectionId is required')
+    }
+    const processes = await fetchProcesses(
+      connectionId,
+      sortBy || 'cpu',
+      sortOrder || 'desc',
+      parseInt(maxProcesses) || 25
+    )
+    res.json({ processes })
+  } catch (err) {
+    sendError(res, 502, 'PROCESS_FETCH_FAILED', err instanceof Error ? err.message : 'Failed to fetch processes')
   }
 })
 
