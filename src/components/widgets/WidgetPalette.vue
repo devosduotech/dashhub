@@ -108,6 +108,11 @@ function addWidget(type: WidgetType) {
     background-color: var(--color-bg-hover);
     color: var(--color-text);
   }
+
+  &:focus-visible {
+    outline: 2px solid var(--color-primary);
+    outline-offset: 2px;
+  }
 }
 
 .palette-list {
@@ -133,6 +138,11 @@ function addWidget(type: WidgetType) {
   &:hover {
     background-color: var(--color-bg-hover);
     border-color: var(--color-primary);
+  }
+
+  &:focus-visible {
+    outline: 2px solid var(--color-primary);
+    outline-offset: 2px;
   }
 }
 

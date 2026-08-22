@@ -119,9 +119,12 @@ onUnmounted(() => {
 
       <div v-else class="month-view">
         <div class="month-nav">
-          <button class="nav-btn" @click="prevMonth"><AppIcon name="chevron-right" :size="14" /></button>
+          <button class="nav-btn prev" @click="prevMonth"><AppIcon name="chevron-right" :size="14" /></button>
           <span class="month-label" @click="goToday">{{ monthLabel }}</span>
           <button class="nav-btn next" @click="nextMonth"><AppIcon name="chevron-right" :size="14" /></button>
+          <button v-if="cfg.serverUrl" class="refresh-btn-inline" :disabled="loading" @click="loadEvents">
+            <AppIcon name="refresh" :size="14" />
+          </button>
         </div>
         <div class="weekday-row">
           <span v-for="d in ['Su','Mo','Tu','We','Th','Fr','Sa']" :key="d" class="weekday">{{ d }}</span>
@@ -177,6 +180,7 @@ onUnmounted(() => {
   align-items: center;
   justify-content: space-between;
   margin-bottom: 0.5rem;
+  gap: 0.25rem;
 }
 
 .month-label { font-size: 0.875rem; font-weight: 600; color: var(--color-text); cursor: pointer; }
@@ -194,7 +198,7 @@ onUnmounted(() => {
   color: var(--color-text-muted);
   cursor: pointer;
   &:hover { background-color: var(--color-bg-hover); color: var(--color-text); }
-  &.next { transform: rotate(0deg); }
+  &.prev { transform: scaleX(-1); }
 }
 
 .weekday-row { display: grid; grid-template-columns: repeat(7, 1fr); gap: 0; margin-bottom: 0.25rem; }
@@ -222,6 +226,22 @@ onUnmounted(() => {
     border-radius: 50%;
     background-color: var(--color-primary);
   }
+}
+
+.refresh-btn-inline {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 1.5rem;
+  height: 1.5rem;
+  border: none;
+  background: none;
+  border-radius: 4px;
+  color: var(--color-text-muted);
+  cursor: pointer;
+  margin-left: auto;
+  &:hover:not(:disabled) { background-color: var(--color-bg-hover); color: var(--color-text); }
+  &:disabled { opacity: 0.5; cursor: not-allowed; }
 }
 
 .refresh-btn {

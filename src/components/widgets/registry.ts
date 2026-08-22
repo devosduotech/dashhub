@@ -150,3 +150,4 @@ export const widgetRegistry: Record<WidgetType, WidgetDefinition> = {
 }
 
 export const widgetList = Object.values(widgetRegistry)
+  .sort((a, b) => a.label.localeCompare(b.label))

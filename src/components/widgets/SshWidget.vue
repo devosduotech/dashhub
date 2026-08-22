@@ -119,6 +119,7 @@ function closeTerminal() {
   background-color: var(--color-bg-elevated);
   border: 1px solid var(--color-border); border-radius: 6px;
   transition: border-color 150ms ease;
+  overflow: hidden;
 
   &:hover {
     border-color: var(--color-border-strong);
@@ -133,7 +134,7 @@ function closeTerminal() {
 }
 .conn-info { flex: 1; display: flex; flex-direction: column; min-width: 0; }
 .conn-name { font-weight: 500; font-size: 0.875rem; color: var(--color-text); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.conn-detail { font-size: 0.75rem; color: var(--color-text-dim); }
+.conn-detail { font-size: 0.75rem; color: var(--color-text-dim); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .auth-badge {
   display: inline-flex;
   align-items: center;
@@ -154,7 +155,7 @@ function closeTerminal() {
   font-size: 0.8125rem;
   cursor: pointer;
   white-space: nowrap;
-  flex-shrink: 0;
+  flex-shrink: 1;
   transition: background-color 150ms ease;
 
   &:hover:not(:disabled) {
@@ -180,7 +181,7 @@ function closeTerminal() {
   color: var(--color-text-muted);
   font-size: 0.8125rem;
   cursor: pointer;
-  flex-shrink: 0;
+  flex-shrink: 1;
   transition: background-color 150ms ease;
 
   &:hover:not(:disabled) {
