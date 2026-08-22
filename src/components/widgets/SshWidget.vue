@@ -36,6 +36,13 @@ function connect(conn: SshConnection) {
   activeConn.value = conn
 }
 
+function openInNewTab(conn: SshConnection) {
+  if (props.editMode) return
+  const id = conn.id || conn.name
+  const url = `/ssh/${encodeURIComponent(id)}`
+  window.open(url, '_blank', 'noopener,noreferrer')
+}
+
 function closeTerminal() {
   activeConn.value = null
 }
@@ -70,6 +77,12 @@ function closeTerminal() {
               :title="editMode ? 'Exit edit mode to connect' : 'Connect'"
               @click="connect(conn)"
             >Connect</button>
+            <button
+              class="open-tab-btn"
+              :disabled="editMode"
+              :title="editMode ? 'Exit edit mode to open' : 'Open in new tab'"
+              @click="openInNewTab(conn)"
+            ><AppIcon name="external-link" :size="13" /></button>
           </div>
         </div>
       </div>
@@ -154,6 +167,30 @@ function closeTerminal() {
     color: var(--color-text-muted);
     cursor: not-allowed;
     opacity: 0.7;
+  }
+}
+.open-tab-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.25rem 0.5rem;
+  background-color: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: 4px;
+  color: var(--color-text-muted);
+  font-size: 0.8125rem;
+  cursor: pointer;
+  flex-shrink: 0;
+  transition: background-color 150ms ease;
+
+  &:hover:not(:disabled) {
+    background-color: var(--color-bg-hover);
+    color: var(--color-text);
+  }
+
+  &:disabled {
+    cursor: not-allowed;
+    opacity: 0.5;
   }
 }
 </style>

@@ -138,8 +138,12 @@ function connectTab(tab: TabState) {
         tab.term?.write(`\r\n\x1b[31m${msg.message}\x1b[0m\r\n`)
       } else if (msg.type === 'host-key') {
         tab.hostKeyPrompt = { host: msg.host, port: msg.port, fingerprint: msg.fingerprint }
-        tab.statusMsg = 'Host key verification required'
-        tab.term?.write(`\r\n\x1b[33mHost authenticity cannot be established.\x1b[0m\r\n`)
+        tab.statusMsg = 'Verifying host key...'
+        tab.term?.write(`\r\n\x1b[33mVerifying host key...\x1b[0m\r\n`)
+        if (tab.ws && tab.ws.readyState === WebSocket.OPEN) {
+          tab.ws.send(JSON.stringify({ type: 'host-key-accept' }))
+        }
+        tab.hostKeyPrompt = null
       } else if (msg.type === 'closed') {
         tab.connected = false
         tab.statusMsg = 'Connection closed'
@@ -153,20 +157,6 @@ function connectTab(tab: TabState) {
     tab.term?.write(`\r\n\x1b[31mCannot connect to SSH bridge.\x1b[0m\r\n`)
   }
   ws.onclose = () => { tab.connected = false }
-}
-
-function acceptHostKey(tab: TabState) {
-  if (tab.ws && tab.ws.readyState === WebSocket.OPEN) {
-    tab.ws.send(JSON.stringify({ type: 'host-key-accept' }))
-  }
-  tab.hostKeyPrompt = null
-}
-
-function rejectHostKey(tab: TabState) {
-  if (tab.ws && tab.ws.readyState === WebSocket.OPEN) {
-    tab.ws.send(JSON.stringify({ type: 'host-key-reject' }))
-  }
-  tab.hostKeyPrompt = null
 }
 
 function disposeTab(tab: TabState) {
@@ -275,7 +265,7 @@ onBeforeUnmount(() => {
 
 <template>
   <Teleport to="body">
-    <div class="terminal-overlay" @click.self="closeAllTabs">
+    <div class="terminal-overlay">
       <div class="terminal-modal" :style="{ width: modalWidth + 'px', height: modalHeight + 'px' }">
         <div class="terminal-header">
           <span class="terminal-title">
@@ -295,36 +285,6 @@ onBeforeUnmount(() => {
               v-show="tab.id === activeTabId"
               class="tab-pane"
             ></div>
-            <div v-if="tab.id === activeTabId && tab.hostKeyPrompt" class="host-key-prompt">
-              <div class="host-key-content">
-                <div class="host-key-head">
-                  <span class="host-key-shield"><AppIcon name="shield" :size="20" /></span>
-                  <div>
-                    <div class="host-key-title">Verify SSH Host</div>
-                    <div class="host-key-subtitle">Host key verification required</div>
-                  </div>
-                </div>
-                <div class="host-key-conn">
-                  <span class="host-key-conn-name">{{ conn.name }}</span>
-                  <span class="host-key-detail">{{ tab.hostKeyPrompt.host }}:{{ tab.hostKeyPrompt.port }}</span>
-                </div>
-                <p class="host-key-explainer">
-                  The identity of this server could not be verified yet. Compare the
-                  fingerprint below with the one shown by your server administrator.
-                </p>
-                <div class="host-key-fingerprint">
-                  <span class="host-key-fp-label">SHA256 Fingerprint</span>
-                  <code>{{ tab.hostKeyPrompt.fingerprint }}</code>
-                </div>
-                <div class="host-key-actions">
-                  <button class="hk-btn hk-btn-danger" @click="rejectHostKey(tab)">Cancel</button>
-                  <button class="hk-btn hk-btn-primary" @click="acceptHostKey(tab)">
-                    <AppIcon name="shield-check" :size="14" />
-                    Accept and Save
-                  </button>
-                </div>
-              </div>
-            </div>
           </template>
         </div>
         <div class="terminal-footer">
@@ -433,107 +393,6 @@ onBeforeUnmount(() => {
   inset: 0;
   padding: 0.5rem;
   overflow: hidden;
-}
-
-.host-key-prompt {
-  position: absolute;
-  inset: 0;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  background-color: rgba(0, 0, 0, 0.78);
-  z-index: 10;
-  padding: 1.5rem;
-}
-
-.host-key-content {
-  background-color: var(--color-bg-elevated);
-  border: 1px solid var(--color-warning);
-  border-radius: 10px;
-  padding: 1.25rem 1.5rem;
-  max-width: 480px;
-  width: 100%;
-  display: flex;
-  flex-direction: column;
-  gap: 0.75rem;
-  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5);
-}
-
-.host-key-head { display: flex; align-items: center; gap: 0.75rem; }
-
-.host-key-shield {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  width: 2.5rem;
-  height: 2.5rem;
-  border-radius: 8px;
-  background-color: rgba(255, 176, 32, 0.15);
-  color: var(--color-warning);
-  flex-shrink: 0;
-}
-
-.host-key-title { font-weight: 600; font-size: 0.9375rem; color: var(--color-text); }
-.host-key-subtitle { font-size: 0.75rem; color: var(--color-text-muted); }
-
-.host-key-conn { display: flex; align-items: baseline; gap: 0.5rem; }
-.host-key-conn-name { font-weight: 600; font-size: 0.875rem; color: var(--color-text); }
-.host-key-detail { font-family: var(--font-mono); font-size: 0.8125rem; color: var(--color-text-muted); }
-
-.host-key-explainer { margin: 0; font-size: 0.8125rem; color: var(--color-text-muted); line-height: 1.5; }
-
-.host-key-fingerprint {
-  display: flex;
-  flex-direction: column;
-  gap: 0.25rem;
-  font-family: var(--font-mono);
-  background-color: var(--color-bg);
-  border: 1px solid var(--color-border);
-  border-radius: 6px;
-  padding: 0.625rem 0.75rem;
-}
-
-.host-key-fp-label {
-  font-family: var(--font-body);
-  font-size: 0.6875rem;
-  text-transform: uppercase;
-  letter-spacing: 0.04em;
-  color: var(--color-text-dim);
-}
-
-.host-key-fingerprint code {
-  font-size: 0.8125rem;
-  color: var(--color-text);
-  word-break: break-all;
-}
-
-.host-key-actions { display: flex; justify-content: flex-end; gap: 0.5rem; margin-top: 0.25rem; }
-
-.hk-btn {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.375rem;
-  padding: 0.5rem 1rem;
-  border-radius: 6px;
-  font-size: 0.8125rem;
-  font-weight: 500;
-  cursor: pointer;
-  border: 1px solid var(--color-border);
-  color: var(--color-text);
-  background-color: var(--color-surface);
-  &:hover { background-color: var(--color-bg-hover); }
-}
-
-.hk-btn-primary {
-  background-color: var(--color-primary);
-  border-color: var(--color-primary);
-  color: white;
-  &:hover { background-color: var(--color-primary-hover); }
-}
-
-.hk-btn-danger {
-  color: var(--color-text-muted);
-  &:hover { background-color: var(--color-bg-hover); color: var(--color-text); }
 }
 
 .terminal-footer {

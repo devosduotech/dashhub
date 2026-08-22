@@ -30,6 +30,34 @@ function parseICSEvents(icsText) {
   return events
 }
 
+function extractTag(xml, tag) {
+  const re = new RegExp(`<[^>:]*:${tag}[^>]*>([\\s\\S]*?)</[^>:]*:${tag}>`, 'i')
+  const m = xml.match(re)
+  return m ? m[1].trim() : null
+}
+
+function extractHref(xml) {
+  return extractTag(xml, 'href')
+}
+
+function extractDisplayname(xml) {
+  return extractTag(xml, 'displayname')
+}
+
+function hasCalendarResource(xml) {
+  return /<[^>:]*:resourcetype>[\s\S]*?<[^>:]*:calendar\s*\/>[\s\S]*?<\/[^>:]*:resourcetype>/i.test(xml)
+}
+
+function findAllResponseBlocks(xml) {
+  const blocks = []
+  const re = /<[^>:]*:response>([\s\S]*?)<\/[^>:]*:response>/gi
+  let m
+  while ((m = re.exec(xml)) !== null) {
+    blocks.push(m[0])
+  }
+  return blocks
+}
+
 export async function discoverCalendars(baseUrl, username, password) {
   const url = baseUrl.replace(/\/+$/, '')
   const headers = {
@@ -38,38 +66,87 @@ export async function discoverCalendars(baseUrl, username, password) {
     'Content-Type': 'application/xml; charset=utf-8'
   }
 
-  const body = `<?xml version="1.0" encoding="utf-8" ?>
-<D:propfind xmlns:D="DAV:" xmlns:C="urn:ietf:params:xml:ns:caldav" xmlns:CS="http://calendarserver.org/ns/">
+  const propfindBody = `<?xml version="1.0" encoding="utf-8" ?>
+<D:propfind xmlns:D="DAV:" xmlns:C="urn:ietf:params:xml:ns:caldav" xmlns:CS="http://calendarserver.org/ns/" xmlns:NC="http://nextcloud.org/ns">
   <D:prop>
     <D:displayname />
     <D:resourcetype />
     <CS:getctag />
     <C:supported-calendar-component-set />
+    <D:calendar-home-set />
   </D:prop>
 </D:propfind>`
 
-  const res = await fetch(url + '/', { method: 'PROPFIND', headers, body })
+  const res = await fetch(url + '/', { method: 'PROPFIND', headers, body: propfindBody })
   if (!res.ok && res.status !== 207) {
     throw new Error(`Discovery failed: HTTP ${res.status}`)
   }
 
   const xml = await res.text()
   const calendars = []
-  const responseRegex = /<D:response>([\s\S]*?)<\/D:response>/g
-  let match
-  while ((match = responseRegex.exec(xml)) !== null) {
-    const block = match[1]
-    if (block.includes('<C:calendar/>')) {
-      const hrefMatch = block.match(/<D:href>([\s\S]*?)<\/D:href>/)
-      const nameMatch = block.match(/<D:displayname>([\s\S]*?)<\/D:displayname>/)
-      if (hrefMatch) {
-        calendars.push({
-          url: hrefMatch[1],
-          name: nameMatch ? nameMatch[1] : hrefMatch[1]
-        })
+
+  // Step 1: Check if response has calendar resources directly
+  const blocks = findAllResponseBlocks(xml)
+  for (const block of blocks) {
+    if (hasCalendarResource(block)) {
+      const href = extractHref(block)
+      const name = extractDisplayname(block)
+      if (href) {
+        calendars.push({ url: href, name: name || href })
       }
     }
   }
+
+  if (calendars.length > 0) return calendars
+
+  // Step 2: Look for calendar-home-set (Nextcloud pattern)
+  const homeSetRaw = extractTag(xml, 'calendar-home-set')
+  if (homeSetRaw) {
+    const hrefMatch = homeSetRaw.match(/<[^>:]*:href[^>]*>([\s\S]*?)<\/[^>:]*:href>/i)
+    if (hrefMatch) {
+      let homeUrl = hrefMatch[1].trim()
+      if (homeUrl.startsWith('/')) {
+        const origin = new URL(url)
+        homeUrl = origin.origin + homeUrl
+      }
+      const calRes = await fetch(homeUrl, { method: 'PROPFIND', headers, body: propfindBody })
+      if (calRes.ok || calRes.status === 207) {
+        const calXml = await calRes.text()
+        const calBlocks = findAllResponseBlocks(calXml)
+        for (const block of calBlocks) {
+          if (hasCalendarResource(block)) {
+            const href = extractHref(block)
+            const name = extractDisplayname(block)
+            if (href) {
+              calendars.push({ url: href, name: name || href })
+            }
+          }
+        }
+      }
+    }
+  }
+
+  if (calendars.length > 0) return calendars
+
+  // Step 3: Try Nextcloud direct calendars path
+  if (url.includes('/remote.php/dav')) {
+    const calUrl = url.replace(/\/$/, '') + '/calendars/' + username + '/'
+    const calRes = await fetch(calUrl, { method: 'PROPFIND', headers, body: propfindBody })
+    if (calRes.ok || calRes.status === 207) {
+      const calXml = await calRes.text()
+      const calBlocks = findAllResponseBlocks(calXml)
+      for (const block of calBlocks) {
+        if (hasCalendarResource(block)) {
+          const href = extractHref(block)
+          const name = extractDisplayname(block)
+          if (href) {
+            calendars.push({ url: href, name: name || href })
+          }
+        }
+      }
+    }
+  }
+
   return calendars
 }
 
@@ -106,7 +183,7 @@ export async function fetchEvents(baseUrl, username, password, calendarUrl, star
 
   const xml = await res.text()
   const events = []
-  const dataRegex = /<C:calendar-data>([\s\S]*?)<\/C:calendar-data>/g
+  const dataRegex = /<[^>:]*:calendar-data>([\s\S]*?)<\/[^>:]*:calendar-data>/gi
   let match
   while ((match = dataRegex.exec(xml)) !== null) {
     const icsData = match[1]
