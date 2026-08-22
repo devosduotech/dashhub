@@ -217,6 +217,29 @@ export const useConfigStore = defineStore('config', () => {
     return item
   }
 
+  function addWidgetToColumn(pageIndex: number, column: number, type: WidgetType, title: string, widgetConfig: PageItem['config']) {
+    if (pageIndex < 0 || pageIndex >= pages.value.length) return
+    const page = pages.value[pageIndex]
+    const colCount = Math.max(1, Math.min(page.columnCount ?? 3, 6))
+    const col = Math.max(0, Math.min(column, colCount - 1))
+    const item: PageItem = {
+      id: crypto.randomUUID(),
+      type,
+      title,
+      column: col,
+      config: widgetConfig
+    }
+    const colItems = page.items.filter(i => (i.column ?? 0) === col)
+    if (colItems.length > 0) {
+      const lastIdx = page.items.indexOf(colItems[colItems.length - 1]) + 1
+      page.items.splice(lastIdx, 0, item)
+    } else {
+      page.items.push(item)
+    }
+    debouncedSave()
+    return item
+  }
+
   function removeWidget(pageIndex: number, itemId: string) {
     if (pageIndex < 0 || pageIndex >= pages.value.length) return
     const items = pages.value[pageIndex].items
@@ -299,6 +322,7 @@ export const useConfigStore = defineStore('config', () => {
     reorderPages,
     moveWidgetBetweenPages,
     addWidget,
+    addWidgetToColumn,
     removeWidget,
     moveWidget,
     moveWidgetToColumn,

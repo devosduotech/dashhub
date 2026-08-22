@@ -17,6 +17,7 @@ import { setupSshBridge } from './sshBridge.js'
 import { UPLOADS_DIR, listUploads, saveUpload, deleteUpload, MAX_UPLOAD_SIZE } from './uploadsManager.js'
 import { getChannelVideos, isValidChannelId } from './youtube.js'
 import { getFeedItems, isValidFeedUrl } from './rss.js'
+import { getHistory as getUptimeHistory, appendResults as appendUptimeResults } from './uptimeStore.js'
 
 const app = express()
 const PORT = process.env.API_PORT || 48231
@@ -252,6 +253,60 @@ app.all('/api/speedtest/proxy', async (req, res) => {
     }
   } catch (err) {
     sendError(res, 502, 'PROXY_FAILED', err instanceof Error ? err.message : 'Proxy request failed')
+  }
+})
+
+// --- Uptime monitoring endpoints ---
+
+app.get('/api/uptime/history', (_req, res) => {
+  try {
+    const history = getUptimeHistory()
+    res.json(history)
+  } catch (err) {
+    sendError(res, 500, 'UPTIME_HISTORY_FAILED', err instanceof Error ? err.message : 'Failed to read history')
+  }
+})
+
+app.post('/api/uptime/check', express.json({ limit: '1mb' }), async (req, res) => {
+  try {
+    const { urls } = req.body
+    if (!Array.isArray(urls) || urls.length === 0) {
+      return sendError(res, 400, 'MISSING_URLS', 'urls array is required')
+    }
+    if (urls.length > 20) {
+      return sendError(res, 400, 'TOO_MANY_URLS', 'Maximum 20 URLs per request')
+    }
+    const results = await Promise.all(
+      urls.map(async (item) => {
+        const start = Date.now()
+        try {
+          const controller = new AbortController()
+          const timeout = setTimeout(() => controller.abort(), 5000)
+          const response = await fetch(item.url, {
+            method: 'HEAD',
+            signal: controller.signal,
+            redirect: 'follow'
+          })
+          clearTimeout(timeout)
+          const latency = Date.now() - start
+          return {
+            id: item.id,
+            status: response.ok ? 'up' : 'down',
+            latency
+          }
+        } catch (err) {
+          return {
+            id: item.id,
+            status: 'down',
+            latency: Date.now() - start
+          }
+        }
+      })
+    )
+    appendUptimeResults(results)
+    res.json({ results })
+  } catch (err) {
+    sendError(res, 500, 'UPTIME_CHECK_FAILED', err instanceof Error ? err.message : 'Check failed')
   }
 })
 

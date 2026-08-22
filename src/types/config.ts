@@ -11,6 +11,8 @@ export type WidgetType =
   | 'notes'
   | 'status-indicators'
   | 'speedtest'
+  | 'weather'
+  | 'uptime'
 
 export type SpeedtestServer =
   | 'cloudflare'
@@ -215,4 +217,23 @@ export interface SpeedtestWidgetConfig extends WidgetConfig {
   customBaseUrl?: string
   testDuration?: number
   parallelStreams?: number
+}
+
+export interface WeatherWidgetConfig extends WidgetConfig {
+  location: string
+  latitude: number
+  longitude: number
+  tempUnit: 'celsius' | 'fahrenheit'
+  windUnit: 'kmh' | 'mph'
+}
+
+export interface UptimeEndpoint {
+  id: string
+  name: string
+  url: string
+}
+
+export interface UptimeWidgetConfig extends WidgetConfig {
+  endpoints: UptimeEndpoint[]
+  checkInterval: 60 | 300 | 900 | 1800
 }

@@ -14,6 +14,7 @@ const store = useConfigStore()
 
 const dragInfo = ref<{ itemId: string; columnIndex: number } | null>(null)
 const dragOverInfo = ref<{ index: number; columnIndex: number } | null>(null)
+const paletteColumn = ref<number | null>(null)
 
 const columnCount = computed(() => store.activePage?.columnCount ?? 3)
 
@@ -96,7 +97,6 @@ watch(() => store.activePageIndex, (newIndex) => {
       @cta="store.toggleEditMode"
     />
     <div v-else class="page-content">
-      <WidgetPalette v-if="store.editMode" />
       <div class="widget-grid" :style="{ gridTemplateColumns: `repeat(${columnCount}, 1fr)` }">
         <div
           v-for="(columnItems, colIndex) in widgetsByColumn"
@@ -122,6 +122,13 @@ watch(() => store.activePageIndex, (newIndex) => {
           >
             <WidgetWrapper :item="item" :page-index="store.activePageIndex" />
           </div>
+          <button
+            v-if="store.editMode"
+            class="add-widget-btn"
+            @click="paletteColumn = colIndex"
+          >
+            <AppIcon name="plus" :size="14" /> Add Widget
+          </button>
           <div
             v-if="dragInfo || store.editMode"
             class="column-drop-zone"
@@ -134,11 +141,12 @@ watch(() => store.activePageIndex, (newIndex) => {
             <template v-else>End of column</template>
           </div>
         </div>
-        <div v-if="store.editMode && store.activePage.items.length === 0" class="empty-page">
-          <AppIcon name="dashboard" :size="28" class="empty-page-icon" />
-          <p>No widgets yet. Use the palette above to add one.</p>
-        </div>
       </div>
+      <WidgetPalette
+        v-if="paletteColumn !== null"
+        :column-index="paletteColumn"
+        @close="paletteColumn = null"
+      />
     </div>
   </main>
 </template>
@@ -213,6 +221,28 @@ watch(() => store.activePageIndex, (newIndex) => {
     border-color: var(--color-primary);
     background-color: rgba(var(--color-primary-rgb), 0.12);
     color: var(--color-primary);
+  }
+}
+
+.add-widget-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.375rem;
+  width: 100%;
+  padding: 0.5rem 0.75rem;
+  background: none;
+  border: 1px dashed var(--color-border);
+  border-radius: 6px;
+  color: var(--color-text-muted);
+  font-size: 0.8125rem;
+  cursor: pointer;
+  transition: all 150ms ease;
+
+  &:hover {
+    border-color: var(--color-primary);
+    color: var(--color-primary);
+    background-color: rgba(var(--color-primary-rgb), 0.05);
   }
 }
 

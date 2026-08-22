@@ -120,6 +120,24 @@ export const widgetRegistry: Record<WidgetType, WidgetDefinition> = {
     settingsForm: () => import('@/components/widgets/SpeedtestSettingsForm.vue'),
     defaultConfig: () => ({ server: 'cloudflare', customBaseUrl: '', testDuration: 10, parallelStreams: 4 })
   },
+  weather: {
+    type: 'weather',
+    label: 'Weather',
+    icon: '🌤️',
+    description: 'Current conditions and 5-day forecast',
+    component: () => import('@/components/widgets/WeatherWidget.vue'),
+    settingsForm: () => import('@/components/widgets/WeatherSettingsForm.vue'),
+    defaultConfig: () => ({ location: '', latitude: 0, longitude: 0, tempUnit: 'celsius', windUnit: 'kmh' })
+  },
+  uptime: {
+    type: 'uptime',
+    label: 'Server Uptime',
+    icon: '🟢',
+    description: 'Monitor endpoint availability',
+    component: () => import('@/components/widgets/UptimeWidget.vue'),
+    settingsForm: () => import('@/components/widgets/UptimeSettingsForm.vue'),
+    defaultConfig: () => ({ endpoints: [], checkInterval: 300 })
+  },
 }
 
 export const widgetList = Object.values(widgetRegistry)
