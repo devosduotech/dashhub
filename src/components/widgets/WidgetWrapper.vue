@@ -54,6 +54,7 @@ function saveSettings() {
 
 function updateDraftConfig(newConfig: WidgetConfig) {
   draftConfig.value = newConfig
+  store.updateWidget(props.pageIndex, props.item.id, { config: newConfig })
 }
 
 function removeWidget() {

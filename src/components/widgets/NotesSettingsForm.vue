@@ -10,8 +10,8 @@ const emit = defineEmits<{
   (e: 'update', config: Record<string, unknown>): void
 }>()
 
-function getConfig(): { items: NoteItem[]; displayMode?: string; showCompleted?: boolean; sortBy?: string } {
-  return props.config as { items: NoteItem[]; displayMode?: string; showCompleted?: boolean; sortBy?: string }
+function getConfig(): { items: NoteItem[]; sortBy?: string } {
+  return props.config as { items: NoteItem[]; sortBy?: string }
 }
 
 const editingIndex = ref(-1)
@@ -65,14 +65,6 @@ function cancelEdit() {
   editingIndex.value = -1
 }
 
-function updateDisplayMode(value: string) {
-  emit('update', { ...props.config, displayMode: value })
-}
-
-function updateShowCompleted(value: boolean) {
-  emit('update', { ...props.config, showCompleted: value })
-}
-
 function updateSortBy(value: string) {
   emit('update', { ...props.config, sortBy: value })
 }
@@ -80,33 +72,12 @@ function updateSortBy(value: string) {
 
 <template>
   <div class="notes-form">
-    <div class="form-row">
-      <div class="form-group">
-        <label class="form-label">Display Mode</label>
-        <select :value="getConfig().displayMode || 'reminders'" class="form-select" @change="updateDisplayMode(($event.target as HTMLSelectElement).value)">
-          <option value="reminders">Reminders</option>
-          <option value="notes">Notes</option>
-        </select>
-      </div>
-      <div class="form-group">
-        <label class="form-label">Sort By</label>
-        <select :value="getConfig().sortBy || 'created'" class="form-select" @change="updateSortBy(($event.target as HTMLSelectElement).value)">
-          <option value="created">Created Date</option>
-          <option value="priority">Priority</option>
-        </select>
-      </div>
-    </div>
-
     <div class="form-group">
-      <label class="form-toggle">
-        <input
-          type="checkbox"
-          :checked="getConfig().showCompleted !== false"
-          @change="updateShowCompleted(($event.target as HTMLInputElement).checked)"
-        />
-        <span class="toggle-slider"></span>
-        <span class="toggle-label">Show completed notes</span>
-      </label>
+      <label class="form-label">Sort By</label>
+      <select :value="getConfig().sortBy || 'created'" class="form-select" @change="updateSortBy(($event.target as HTMLSelectElement).value)">
+        <option value="created">Created Date</option>
+        <option value="priority">Priority</option>
+      </select>
     </div>
 
     <div class="links-section">
@@ -142,13 +113,9 @@ function updateSortBy(value: string) {
           v-for="(item, index) in (getConfig().items || [])"
           :key="item.id"
           class="link-item"
-          :class="{ 'completed-item': item.completed }"
         >
-          <span class="note-status" :class="{ done: item.completed }">
-            {{ item.completed ? '\u2713' : '\u25CB' }}
-          </span>
           <span class="link-info">
-            <span class="link-title" :class="{ 'line-through': item.completed }">{{ item.text }}</span>
+            <span class="link-title">{{ item.text }}</span>
             <span class="link-url">Priority: {{ item.priority || 'medium' }}</span>
           </span>
           <div class="link-actions">
@@ -210,25 +177,6 @@ function updateSortBy(value: string) {
   resize: vertical;
   min-height: 4rem;
   font-family: inherit;
-}
-
-.form-toggle {
-  display: flex;
-  align-items: center;
-  gap: 0.625rem;
-  cursor: pointer;
-  font-size: 0.875rem;
-  color: var(--color-text);
-
-  input {
-    width: 1rem;
-    height: 1rem;
-    accent-color: var(--color-primary);
-  }
-}
-
-.toggle-label {
-  user-select: none;
 }
 
 .links-section {

@@ -9,6 +9,7 @@ export type WidgetType =
   | 'public-ip'
   | 'latest-versions'
   | 'notes'
+  | 'reminders'
   | 'status-indicators'
   | 'speedtest'
   | 'weather'
@@ -193,7 +194,11 @@ export interface NoteItem {
 
 export interface NotesWidgetConfig extends WidgetConfig {
   items: NoteItem[]
-  displayMode?: 'notes' | 'reminders'
+  sortBy?: 'created' | 'priority'
+}
+
+export interface RemindersWidgetConfig extends WidgetConfig {
+  items: NoteItem[]
   showCompleted?: boolean
   sortBy?: 'created' | 'priority'
 }

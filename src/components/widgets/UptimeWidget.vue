@@ -97,6 +97,11 @@ onUnmounted(() => {
       <p>Add endpoints in widget settings</p>
     </div>
 
+    <div v-else-if="error && Object.keys(history).length === 0 && Object.keys(latestResults).length === 0" class="error-state">
+      <AppIcon name="alert-circle" :size="22" />
+      <p>{{ error }}</p>
+    </div>
+
     <div v-else-if="loading && Object.keys(history).length === 0" class="loading-state">
       <AppIcon name="spinner" :size="22" />
       <p>Loading uptime data...</p>
@@ -152,7 +157,8 @@ onUnmounted(() => {
 }
 
 .empty-state,
-.loading-state {
+.loading-state,
+.error-state {
   display: flex;
   flex-direction: column;
   align-items: center;

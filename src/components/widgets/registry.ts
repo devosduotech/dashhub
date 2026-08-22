@@ -95,12 +95,21 @@ export const widgetRegistry: Record<WidgetType, WidgetDefinition> = {
   },
   notes: {
     type: 'notes',
-    label: 'Notes & Reminders',
+    label: 'Notes',
     icon: '📝',
-    description: 'Personal notes and task reminders',
+    description: 'Personal text notes',
     component: () => import('@/components/widgets/NotesWidget.vue'),
     settingsForm: () => import('@/components/widgets/NotesSettingsForm.vue'),
-    defaultConfig: () => ({ items: [], displayMode: 'reminders', showCompleted: true, sortBy: 'created' })
+    defaultConfig: () => ({ items: [], sortBy: 'created' })
+  },
+  reminders: {
+    type: 'reminders',
+    label: 'Reminders',
+    icon: '✅',
+    description: 'Task reminders with checkboxes',
+    component: () => import('@/components/widgets/RemindersWidget.vue'),
+    settingsForm: () => import('@/components/widgets/RemindersSettingsForm.vue'),
+    defaultConfig: () => ({ items: [], showCompleted: true, sortBy: 'created' })
   },
   'status-indicators': {
     type: 'status-indicators',

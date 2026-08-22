@@ -107,6 +107,8 @@ export type IconName =
   | 'public-ip'
   | 'latest-versions'
   | 'notes'
+  | 'reminders'
+  | 'check-circle'
   | 'status-indicators'
 
 export const ICONS: Record<IconName, IconPart[]> = {
@@ -563,6 +565,14 @@ export const ICONS: Record<IconName, IconPart[]> = {
     { t: 'path', d: 'M9 12h6' },
     { t: 'path', d: 'M9 16h6' }
   ],
+  'check-circle': [
+    { t: 'path', d: 'M22 11.08V12a10 10 0 1 1-5.93-9.14' },
+    { t: 'path', d: 'm9 11 3 3L22 4' }
+  ],
+  reminders: [
+    { t: 'path', d: 'M22 11.08V12a10 10 0 1 1-5.93-9.14' },
+    { t: 'path', d: 'm9 11 3 3L22 4' }
+  ],
   'status-indicators': [
     { t: 'circle', cx: 12, cy: 12, r: 10 },
     { t: 'circle', cx: 12, cy: 12, r: 4 }
@@ -580,6 +590,7 @@ export const WIDGET_ICONS: Record<string, IconName> = {
   'public-ip': 'public-ip',
   'latest-versions': 'latest-versions',
   notes: 'notes',
+  reminders: 'check-circle',
   'status-indicators': 'status-indicators',
   speedtest: 'bolt',
   weather: 'cloud',

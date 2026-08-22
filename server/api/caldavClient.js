@@ -151,11 +151,35 @@ export async function discoverCalendars(baseUrl, username, password) {
 }
 
 export async function fetchEvents(baseUrl, username, password, calendarUrl, start, end) {
-  const calFullUrl = calendarUrl.startsWith('http') ? calendarUrl : baseUrl.replace(/\/+$/, '') + calendarUrl
+  let calFullUrl = calendarUrl.startsWith('http') ? calendarUrl : baseUrl.replace(/\/+$/, '') + calendarUrl
+  if (!calFullUrl.endsWith('/')) calFullUrl += '/'
+
   const headers = {
     'Authorization': authHeader(username, password),
     'Depth': '1',
     'Content-Type': 'application/xml; charset=utf-8'
+  }
+
+  // Validate calendar URL with PROPFIND first
+  try {
+    const probe = await fetch(calFullUrl, {
+      method: 'PROPFIND',
+      headers: { ...headers, Depth: '0' },
+      body: '<?xml version="1.0" encoding="utf-8" ?><D:propfind xmlns:D="DAV:"><D:prop><D:resourcetype /></D:prop></D:propfind>'
+    })
+    if (probe.status === 404) {
+      const stripped = calFullUrl.replace(/\/+$/, '')
+      const altRes = await fetch(stripped, {
+        method: 'PROPFIND',
+        headers: { ...headers, Depth: '0' },
+        body: '<?xml version="1.0" encoding="utf-8" ?><D:propfind xmlns:D="DAV:"><D:prop><D:resourcetype /></D:prop></D:propfind>'
+      })
+      if (altRes.ok || altRes.status === 207) {
+        calFullUrl = stripped
+      }
+    }
+  } catch {
+    // proceed anyway
   }
 
   const startStr = start.toISOString().replace(/[-:]/g, '').split('.')[0] + 'Z'
@@ -178,7 +202,8 @@ export async function fetchEvents(baseUrl, username, password, calendarUrl, star
 
   const res = await fetch(calFullUrl, { method: 'REPORT', headers, body })
   if (!res.ok && res.status !== 207) {
-    throw new Error(`Fetch events failed: HTTP ${res.status}`)
+    const body = await res.text().catch(() => '')
+    throw new Error(`Fetch events failed: HTTP ${res.status} from ${calFullUrl}${body ? ' — ' + body.slice(0, 200) : ''}`)
   }
 
   const xml = await res.text()
