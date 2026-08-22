@@ -45,10 +45,9 @@ export function calcAvgLatency(entries: UptimeEntry[]): number {
   return Math.round(total / upEntries.length)
 }
 
-const SEVEN_DAYS_MS = 7 * 24 * 60 * 60 * 1000
 const HOUR_MS = 60 * 60 * 1000
 
-export function buildUptimeBar(entries: UptimeEntry[]): Array<{ status: 'up' | 'down' | 'unknown'; hours: number }> {
+export function buildUptimeBar(entries: UptimeEntry[], windowMs: number = HOUR_MS): Array<{ status: 'up' | 'down' | 'unknown'; hours: number }> {
   if (entries.length === 0) return []
 
   const sorted = [...entries].sort((a, b) =>
@@ -57,9 +56,9 @@ export function buildUptimeBar(entries: UptimeEntry[]): Array<{ status: 'up' | '
 
   const segments: Array<{ status: 'up' | 'down' | 'unknown'; hours: number }> = []
   const now = Date.now()
-  const start = now - SEVEN_DAYS_MS
+  const start = now - windowMs
 
-  const buckets = Math.ceil(SEVEN_DAYS_MS / HOUR_MS)
+  const buckets = Math.ceil(windowMs / HOUR_MS)
   const bucketStatus: Array<'up' | 'down' | 'unknown'> = new Array(buckets).fill('unknown')
 
   for (const entry of sorted) {
