@@ -151,7 +151,13 @@ export async function discoverCalendars(baseUrl, username, password) {
 }
 
 export async function fetchEvents(baseUrl, username, password, calendarUrl, start, end) {
-  let calFullUrl = calendarUrl.startsWith('http') ? calendarUrl : baseUrl.replace(/\/+$/, '') + calendarUrl
+  let calFullUrl
+  if (calendarUrl.startsWith('http')) {
+    calFullUrl = calendarUrl
+  } else {
+    const base = new URL(baseUrl)
+    calFullUrl = base.origin + calendarUrl
+  }
   if (!calFullUrl.endsWith('/')) calFullUrl += '/'
 
   const headers = {
