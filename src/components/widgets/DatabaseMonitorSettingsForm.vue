@@ -48,12 +48,12 @@ function update(key: string, value: unknown) {
 
     <div class="form-group">
       <label>MySQL User</label>
-      <input :value="cfg.dbUser || 'root'" @input="update('dbUser', ($event.target as HTMLInputElement).value)" class="input" />
+      <input :value="cfg.dbUser || ''" @input="update('dbUser', ($event.target as HTMLInputElement).value)" class="input" placeholder="Auto-detect from Frappe/WordPress/Laravel" />
     </div>
 
     <div class="form-group">
       <label>MySQL Password</label>
-      <input :value="cfg.dbPassword || ''" @input="update('dbPassword', ($event.target as HTMLInputElement).value)" type="password" class="input" placeholder="Enter password" />
+      <input :value="cfg.dbPassword || ''" @input="update('dbPassword', ($event.target as HTMLInputElement).value)" type="password" class="input" placeholder="Auto-detect from app config" />
     </div>
 
     <div class="form-group">

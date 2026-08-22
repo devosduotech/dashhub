@@ -199,7 +199,7 @@ export const widgetRegistry: Record<WidgetType, WidgetDefinition> = {
     description: 'Monitor MySQL/MariaDB via SSH',
     component: () => import('@/components/widgets/DatabaseMonitorWidget.vue'),
     settingsForm: () => import('@/components/widgets/DatabaseMonitorSettingsForm.vue'),
-    defaultConfig: () => ({ connectionId: '', dbHost: '127.0.0.1', dbPort: 3306, dbUser: 'root', dbPassword: '', refreshInterval: 30 })
+    defaultConfig: () => ({ connectionId: '', dbHost: '127.0.0.1', dbPort: 3306, dbUser: '', dbPassword: '', refreshInterval: 30 })
   },
 }
 

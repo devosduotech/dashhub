@@ -2,22 +2,64 @@ import { runSshCommand } from './sshUtils.js'
 
 function parseMysqlOutput(stdout) {
   const lines = stdout.trim().split('\n')
-  if (lines.length < 2) return null
-  const values = lines[1].split('\t').map(v => v.trim())
+  if (lines.length < 1) return null
+  const map = {}
+  for (const line of lines) {
+    const parts = line.split('\t')
+    if (parts.length >= 2) {
+      map[parts[0].trim().toLowerCase()] = parseInt(parts[1]) || 0
+    }
+  }
+  if (Object.keys(map).length === 0) return null
   return {
-    connected: parseInt(values[0]) || 0,
-    running: parseInt(values[1]) || 0,
-    maxConnections: parseInt(values[2]) || 0,
-    queries: parseInt(values[3]) || 0,
-    slowQueries: parseInt(values[4]) || 0,
-    uptime: parseInt(values[5]) || 0,
-    bytesSent: parseInt(values[6]) || 0,
-    bytesReceived: parseInt(values[7]) || 0
+    connected: map['threads_connected'] ?? 0,
+    running: map['threads_running'] ?? 0,
+    maxConnections: map['max_connections'] ?? 0,
+    queries: map['queries'] ?? 0,
+    slowQueries: map['slow_queries'] ?? 0,
+    uptime: map['uptime'] ?? 0,
+    bytesSent: map['bytes_sent'] ?? 0,
+    bytesReceived: map['bytes_received'] ?? 0
   }
 }
 
+async function detectDbCredentials(connId) {
+  const checks = [
+    // Frappe / ERPNext
+    'cat ~/frappe-bench/sites/*/site_config.json 2>/dev/null | head -10',
+    // WordPress
+    'grep -h "DB_USER\\|DB_PASSWORD\\|DB_HOST" ~/wordpress*/wp-config.php ~/www/*/wp-config.php /var/www/*/wp-config.php 2>/dev/null | head -6',
+    // Laravel
+    'grep -h "DB_USERNAME\\|DB_PASSWORD\\|DB_HOST" ~/aravel*/.env ~/www*/.env /var/www*/.env 2>/dev/null | head -6',
+    // Docker MySQL
+    'docker exec $(docker ps -q --filter ancestor=mysql 2>/dev/null | head -1) env 2>/dev/null | grep MYSQL',
+  ]
+
+  for (const check of checks) {
+    try {
+      const out = await runSshCommand(connId, check)
+      if (!out.trim()) continue
+
+      // Frappe
+      const dbNameMatch = out.match(/"db_name"\s*:\s*"([^"]+)"/)
+      const dbPassMatch = out.match(/"db_password"\s*:\s*"([^"]+)"/)
+      if (dbNameMatch && dbPassMatch) {
+        return { dbUser: dbNameMatch[1], dbPassword: dbPassMatch[1] }
+      }
+
+      // WordPress / Laravel .env style
+      const userMatch = out.match(/(?:DB_USER(?:NAME)?)\s*=\s*['"]?([^'"\s]+)/)
+      const passMatch = out.match(/(?:DB_PASSWORD)\s*=\s*['"]?([^'"\s]+)/)
+      if (userMatch && passMatch) {
+        return { dbUser: userMatch[1], dbPassword: passMatch[1] }
+      }
+    } catch { /* continue */ }
+  }
+  return null
+}
+
 export async function fetchDatabaseMonitor(connId, options = {}) {
-  const { dbHost = '127.0.0.1', dbPort = 3306, dbUser = 'root', dbPassword = '' } = options
+  let { dbHost = '127.0.0.1', dbPort = 3306, dbUser = '', dbPassword = '' } = options
 
   const checkCmd = 'which mysql 2>/dev/null || echo "NOT_INSTALLED"'
   const checkResult = await runSshCommand(connId, checkCmd)
@@ -25,19 +67,31 @@ export async function fetchDatabaseMonitor(connId, options = {}) {
     throw new Error('MySQL client not installed on remote server. Install with: apt install mysql-client or yum install mysql')
   }
 
+  if (!dbPassword) {
+    const detected = await detectDbCredentials(connId)
+    if (detected) {
+      dbUser = detected.dbUser
+      dbPassword = detected.dbPassword
+    }
+  }
+
+  if (!dbUser) {
+    throw new Error('MySQL credentials not found. Enter username and password in widget settings.')
+  }
+
   const passArg = dbPassword ? `-p${dbPassword}` : ''
-  const cmd = `mysql -u ${dbUser} ${passArg} -h ${dbHost} -P ${dbPort} -N -e "SELECT (SELECT VARIABLE_VALUE FROM performance_schema.global_status WHERE VARIABLE_NAME='Threads_connected') AS connected, (SELECT VARIABLE_VALUE FROM performance_schema.global_status WHERE VARIABLE_NAME='Threads_running') AS running, (SELECT VARIABLE_VALUE FROM performance_schema.global_status WHERE VARIABLE_NAME='Max_connections') AS max_conn, (SELECT VARIABLE_VALUE FROM performance_schema.global_status WHERE VARIABLE_NAME='Queries') AS queries, (SELECT VARIABLE_VALUE FROM performance_schema.global_status WHERE VARIABLE_NAME='Slow_queries') AS slow_queries, (SELECT VARIABLE_VALUE FROM performance_schema.global_status WHERE VARIABLE_NAME='Uptime') AS uptime, (SELECT VARIABLE_VALUE FROM performance_schema.global_status WHERE VARIABLE_NAME='Bytes_sent') AS bytes_sent, (SELECT VARIABLE_VALUE FROM performance_schema.global_status WHERE VARIABLE_NAME='Bytes_received') AS bytes_received;" 2>&1`
+  const cmd = `mysql -u ${dbUser} ${passArg} -h ${dbHost} -P ${dbPort} -N -e "SHOW GLOBAL STATUS WHERE Variable_name IN ('Threads_connected','Threads_running','Queries','Slow_queries','Uptime','Bytes_sent','Bytes_received'); SHOW VARIABLES WHERE Variable_name = 'Max_connections';" 2>&1 || true`
   const stdout = await runSshCommand(connId, cmd, 20000)
   const result = parseMysqlOutput(stdout)
   if (!result) {
     const errMsg = stdout.trim() || 'Unknown error'
     if (errMsg.includes('Access denied')) {
-      throw new Error('Access denied. Check MySQL username and password.')
+      throw new Error(`Access denied for '${dbUser}' — check username and password in widget settings.`)
     }
     if (errMsg.includes("Can't connect")) {
-      throw new Error(`Cannot connect to MySQL at ${dbHost}:${dbPort}. Check host and port.`)
+      throw new Error(`Cannot connect to MySQL at ${dbHost}:${dbPort} — check host and port.`)
     }
-    throw new Error(`MySQL error: ${errMsg.substring(0, 200)}`)
+    throw new Error(`MySQL: ${errMsg.substring(0, 200)}`)
   }
   return result
 }
