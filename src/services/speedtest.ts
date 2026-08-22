@@ -62,34 +62,42 @@ function median(arr: number[]): number {
   return sorted.length % 2 ? sorted[mid] : (sorted[mid - 1] + sorted[mid]) / 2
 }
 
-function stddev(arr: number[]): number {
-  const avg = arr.reduce((a, b) => a + b, 0) / arr.length
-  const squareDiffs = arr.map(v => (v - avg) ** 2)
-  const avgSquareDiff = squareDiffs.reduce((a, b) => a + b, 0) / arr.length
-  return Math.sqrt(avgSquareDiff)
+function ipdvJitter(times: number[]): number {
+  if (times.length < 2) return 0
+  const diffs: number[] = []
+  for (let i = 1; i < times.length; i++) {
+    diffs.push(Math.abs(times[i] - times[i - 1]))
+  }
+  return diffs.reduce((a, b) => a + b, 0) / diffs.length
 }
 
 export async function measurePing(
   pingUrl: string,
-  count = 10,
+  count = 35,
   onProgress?: (current: number) => void
 ): Promise<PingResult> {
   const times: number[] = []
-  for (let i = 0; i < count; i++) {
+  const warmUp = 3
+
+  for (let i = 0; i < count + warmUp; i++) {
     const start = performance.now()
     try {
-      await fetch(`${pingUrl}?_=${Date.now()}`, { cache: 'no-store' })
+      await fetch(pingUrl, { cache: 'no-store' })
     } catch { /* timeout is fine */ }
-    times.push(performance.now() - start)
-    onProgress?.(i + 1)
+    const elapsed = performance.now() - start
+    if (i >= warmUp) {
+      times.push(elapsed)
+    }
+    onProgress?.(Math.min(i + 1, count))
   }
+
   return {
     rtt: Math.round(median(times) * 100) / 100,
-    jitter: Math.round(stddev(times) * 100) / 100
+    jitter: Math.round(ipdvJitter(times) * 100) / 100
   }
 }
 
-const CHUNK_SIZES = [256 * 1024, 1024 * 1024, 5 * 1024 * 1024, 10 * 1024 * 1024, 25 * 1024 * 1024]
+const CHUNK_SIZES = [5 * 1024 * 1024, 10 * 1024 * 1024, 25 * 1024 * 1024]
 
 async function fetchChunk(url: string, bytes: number): Promise<number> {
   const sep = url.includes('?') ? '&' : '?'
@@ -134,16 +142,16 @@ export async function measureDownload(
       promises.push(fetchChunk(downloadUrl, bytes))
     }
     const results = await Promise.all(promises)
-    const maxBps = Math.max(...results)
-    points.push(maxBps / 1e6)
-    onProgress?.(maxBps / 1e6, 'download')
+    const totalBps = results.reduce((a, b) => a + b, 0)
+    points.push(totalBps / 1e6)
+    onProgress?.(totalBps / 1e6, 'download')
 
-    if (maxBps / 1e6 > 0) chunkIdx++
+    if (totalBps / 1e6 > 0) chunkIdx++
     await new Promise(r => setTimeout(r, 100))
   }
 
   const validPoints = points.filter(p => p > 0)
-  const speed = validPoints.length ? Math.max(...validPoints) : 0
+  const speed = validPoints.length ? median(validPoints) : 0
   return { speed: Math.round(speed * 100) / 100, points }
 }
 
@@ -164,15 +172,15 @@ export async function measureUpload(
       promises.push(postChunk(uploadUrl, bytes))
     }
     const results = await Promise.all(promises)
-    const maxBps = Math.max(...results)
-    points.push(maxBps / 1e6)
-    onProgress?.(maxBps / 1e6, 'upload')
+    const totalBps = results.reduce((a, b) => a + b, 0)
+    points.push(totalBps / 1e6)
+    onProgress?.(totalBps / 1e6, 'upload')
 
-    if (maxBps / 1e6 > 0) chunkIdx++
+    if (totalBps / 1e6 > 0) chunkIdx++
     await new Promise(r => setTimeout(r, 100))
   }
 
   const validPoints = points.filter(p => p > 0)
-  const speed = validPoints.length ? Math.max(...validPoints) : 0
+  const speed = validPoints.length ? median(validPoints) : 0
   return { speed: Math.round(speed * 100) / 100, points }
 }

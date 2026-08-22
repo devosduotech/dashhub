@@ -77,7 +77,7 @@ async function runTest() {
     const urls = buildUrls(server.value, customBaseUrl.value)
 
     phase.value = 'ping'
-    const pingResult = await measurePing(urls.ping, 10)
+    const pingResult = await measurePing(urls.ping)
 
     phase.value = 'download'
     const dlResult = await measureDownload(
