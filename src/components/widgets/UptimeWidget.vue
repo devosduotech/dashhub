@@ -20,7 +20,8 @@ const cfg = computed(() => props.config as UptimeWidgetConfig)
 const loading = ref(false)
 const checking = ref(false)
 const error = ref<string | null>(null)
-const history = ref<Record<string, UptimeEntry[]>>({})
+const history1h = ref<Record<string, UptimeEntry[]>>({})
+const history7d = ref<Record<string, UptimeEntry[]>>({})
 const latestResults = ref<Record<string, { status: 'up' | 'down' | 'unknown'; latency: number }>>({})
 let checkTimer: ReturnType<typeof setInterval> | null = null
 
@@ -42,8 +43,10 @@ async function runCheck() {
     for (const r of results) {
       latestResults.value[r.id] = { status: r.status, latency: r.latency }
     }
-    const hist = await fetchUptimeHistory()
-    history.value = hist
+    history1h.value = await fetchUptimeHistory(1)
+    if (showHistory.value) {
+      history7d.value = await fetchUptimeHistory(168)
+    }
   } catch (err) {
     error.value = err instanceof Error ? err.message : 'Check failed'
   } finally {
@@ -55,7 +58,7 @@ async function loadHistory() {
   if (endpoints.value.length === 0) return
   loading.value = true
   try {
-    history.value = await fetchUptimeHistory()
+    history1h.value = await fetchUptimeHistory(1)
   } catch {
     // ignore
   } finally {
@@ -63,31 +66,41 @@ async function loadHistory() {
   }
 }
 
-function getEntries(id: string): UptimeEntry[] {
-  return history.value[id] || []
+async function load7DayHistory() {
+  if (endpoints.value.length === 0) return
+  try {
+    history7d.value = await fetchUptimeHistory(168)
+  } catch {
+    // ignore
+  }
+}
+
+function getEntries1h(id: string): UptimeEntry[] {
+  return history1h.value[id] || []
+}
+
+function getEntries7d(id: string): UptimeEntry[] {
+  return history7d.value[id] || []
 }
 
 function getBarSegments(id: string) {
-  return buildUptimeBar(getEntries(id), HOUR_MS)
+  return buildUptimeBar(getEntries1h(id), HOUR_MS)
 }
 
 function get7DayBarSegments(id: string) {
-  return buildUptimeBar(getEntries(id), SEVEN_DAYS_MS)
+  return buildUptimeBar(getEntries7d(id), SEVEN_DAYS_MS)
 }
 
 function getUptime(id: string) {
-  return calcUptimePercent(getEntries(id))
+  return calcUptimePercent(getEntries1h(id))
 }
 
 function get7DayUptime(id: string) {
-  const entries = getEntries(id)
-  const cutoff = Date.now() - SEVEN_DAYS_MS
-  const recent = entries.filter(e => new Date(e.timestamp).getTime() >= cutoff)
-  return calcUptimePercent(recent)
+  return calcUptimePercent(getEntries7d(id))
 }
 
 function getAvgLatency(id: string) {
-  return calcAvgLatency(getEntries(id))
+  return calcAvgLatency(getEntries1h(id))
 }
 
 function statusColor(status: string) {
@@ -96,9 +109,10 @@ function statusColor(status: string) {
   return 'var(--color-text-dim, #666)'
 }
 
-function openHistory(id: string) {
+async function openHistory(id: string) {
   historyEndpoint.value = id
   showHistory.value = true
+  await load7DayHistory()
 }
 
 function closeHistory() {
@@ -129,12 +143,12 @@ onUnmounted(() => {
       <p>Add endpoints in widget settings</p>
     </div>
 
-    <div v-else-if="error && Object.keys(history).length === 0 && Object.keys(latestResults).length === 0" class="error-state">
+    <div v-else-if="error && Object.keys(history1h).length === 0 && Object.keys(latestResults).length === 0" class="error-state">
       <AppIcon name="alert-circle" :size="22" />
       <p>{{ error }}</p>
     </div>
 
-    <div v-else-if="loading && Object.keys(history).length === 0" class="loading-state">
+    <div v-else-if="loading && Object.keys(history1h).length === 0" class="loading-state">
       <AppIcon name="spinner" :size="22" />
       <p>Loading uptime data...</p>
     </div>
@@ -230,7 +244,7 @@ onUnmounted(() => {
             <div class="history-log">
               <h3 class="log-title">Recent Checks</h3>
               <div class="log-list">
-                <div v-for="entry in getEntries(historyEndpoint).slice(-20).reverse()" :key="entry.timestamp" class="log-entry">
+                <div v-for="entry in getEntries7d(historyEndpoint).slice(-20).reverse()" :key="entry.timestamp" class="log-entry">
                   <span class="log-dot" :style="{ backgroundColor: statusColor(entry.status) }"></span>
                   <span class="log-time">{{ formatTimestamp(entry.timestamp) }}</span>
                   <span class="log-status" :class="'status-' + entry.status">{{ entry.status }}</span>

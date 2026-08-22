@@ -35,10 +35,15 @@ function pruneOldEntries(entries) {
   return entries.filter(e => new Date(e.timestamp).getTime() >= cutoff)
 }
 
-export function getHistory() {
+export function getHistory(hours) {
   const history = readHistory()
+  const cutoff = hours ? Date.now() - hours * 60 * 60 * 1000 : null
   for (const id of Object.keys(history)) {
-    history[id] = pruneOldEntries(history[id])
+    let entries = pruneOldEntries(history[id])
+    if (cutoff !== null) {
+      entries = entries.filter(e => new Date(e.timestamp).getTime() >= cutoff)
+    }
+    history[id] = entries
   }
   return history
 }

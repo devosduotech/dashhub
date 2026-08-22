@@ -310,9 +310,10 @@ app.post('/api/caldav/events', express.json({ limit: '1mb' }), async (req, res) 
 
 // --- Uptime monitoring endpoints ---
 
-app.get('/api/uptime/history', (_req, res) => {
+app.get('/api/uptime/history', (req, res) => {
   try {
-    const history = getUptimeHistory()
+    const hours = req.query.hours ? parseInt(req.query.hours, 10) : undefined
+    const history = getUptimeHistory(hours)
     res.json(history)
   } catch (err) {
     sendError(res, 500, 'UPTIME_HISTORY_FAILED', err instanceof Error ? err.message : 'Failed to read history')

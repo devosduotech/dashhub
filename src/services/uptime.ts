@@ -26,8 +26,9 @@ export async function checkEndpoints(
   return data.results
 }
 
-export async function fetchUptimeHistory(): Promise<Record<string, UptimeEntry[]>> {
-  const res = await fetch('/api/uptime/history')
+export async function fetchUptimeHistory(hours?: number): Promise<Record<string, UptimeEntry[]>> {
+  const url = hours ? `/api/uptime/history?hours=${hours}` : '/api/uptime/history'
+  const res = await fetch(url)
   if (!res.ok) throw new Error('Failed to fetch history')
   return res.json()
 }
