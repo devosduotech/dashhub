@@ -1,7 +1,10 @@
 import fs from 'fs'
 import path from 'path'
+import { fileURLToPath } from 'url'
 
-const HISTORY_FILE = path.join(process.cwd(), 'data', 'uptime-history.json')
+const __dirname = path.dirname(fileURLToPath(import.meta.url))
+const DATA_DIR = process.env.CONFIG_DIR || path.resolve(__dirname, '../../data')
+const HISTORY_FILE = path.join(DATA_DIR, 'uptime-history.json')
 const MAX_AGE_DAYS = 7
 
 function ensureDir() {
