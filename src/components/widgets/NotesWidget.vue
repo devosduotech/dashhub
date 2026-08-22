@@ -16,6 +16,7 @@ const items = computed(() => cfg.value.items || [])
 const sortBy = computed(() => cfg.value.sortBy || 'created')
 
 const newNoteText = ref('')
+const newNotePriority = ref<'low' | 'medium' | 'high'>('medium')
 
 const sortedItems = computed(() => {
   const arr = [...items.value]
@@ -33,7 +34,7 @@ function addNote() {
     id: `note-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
     text,
     completed: false,
-    priority: 'medium' as const,
+    priority: newNotePriority.value,
     createdAt: new Date().toISOString()
   }]
   emit('update', { ...props.config, items: allItems })
@@ -53,16 +54,12 @@ function deleteNote(id: string) {
     </div>
 
     <div v-if="sortedItems.length > 0" class="notes-list">
-      <div v-for="item in sortedItems" :key="item.id" class="note-item">
+      <div v-for="item in sortedItems" :key="item.id" class="note-item" :class="'priority-' + (item.priority || 'medium')">
         <div class="note-content">
           <span class="note-text">{{ item.text }}</span>
         </div>
-        <span
-          v-if="item.priority && item.priority !== 'medium'"
-          class="note-priority"
-          :class="'priority-' + item.priority"
-        >
-          {{ item.priority }}
+        <span class="note-priority" :class="'priority-' + (item.priority || 'medium')">
+          {{ item.priority || 'medium' }}
         </span>
         <button class="note-delete" @click="deleteNote(item.id)" title="Delete">
           <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
@@ -78,6 +75,11 @@ function deleteNote(id: string) {
         placeholder="Add a note..."
         @keydown.enter="addNote"
       />
+      <select v-model="newNotePriority" class="quick-add-priority">
+        <option value="low">Low</option>
+        <option value="medium">Med</option>
+        <option value="high">High</option>
+      </select>
       <button class="quick-add-btn" @click="addNote" :disabled="!newNoteText.trim()">
         <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
       </button>
@@ -103,11 +105,17 @@ function deleteNote(id: string) {
   align-items: center;
   gap: 0.625rem;
   padding: 0.5rem 0.625rem;
+  border-left: 3px solid transparent;
   border-bottom: 1px solid var(--color-border);
+  border-radius: 4px;
   transition: background-color 150ms ease;
 
   &:last-child { border-bottom: none; }
   &:hover { background-color: var(--color-bg-hover); .note-delete { opacity: 1; } }
+
+  &.priority-high { border-left-color: var(--color-danger, #ef4444); }
+  &.priority-medium { border-left-color: var(--color-primary, #6366f1); }
+  &.priority-low { border-left-color: var(--color-text-muted, #888); }
 }
 
 .note-content { flex: 1; min-width: 0; }
@@ -123,6 +131,7 @@ function deleteNote(id: string) {
   border-radius: 4px;
 
   &.priority-high { color: var(--color-danger); background-color: var(--color-danger-dim); }
+  &.priority-medium { color: var(--color-primary); background-color: var(--color-primary-dim); }
   &.priority-low { color: var(--color-text-muted); background-color: var(--color-bg); }
 }
 
@@ -164,6 +173,18 @@ function deleteNote(id: string) {
 
   &:focus { outline: none; border-color: var(--color-primary); }
   &::placeholder { color: var(--color-text-dim); }
+}
+
+.quick-add-priority {
+  padding: 0.375rem 0.375rem;
+  background-color: var(--color-bg);
+  border: 1px solid var(--color-border);
+  border-radius: 6px;
+  color: var(--color-text);
+  font-size: 0.75rem;
+  cursor: pointer;
+
+  &:focus { outline: none; border-color: var(--color-primary); }
 }
 
 .quick-add-btn {

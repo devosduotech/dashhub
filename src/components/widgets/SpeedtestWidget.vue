@@ -137,7 +137,7 @@ onUnmounted(() => {
           :stroke-dasharray="`${gaugePercent * 1.57} 157`"
         />
       </svg>
-      <div class="gauge-value">
+      <div class="gauge-text">
         <span class="speed-number">{{ running ? formatSpeed(liveSpeed) : (result ? formatSpeed(result.download.speed) : '—') }}</span>
         <span class="phase-label">{{ phaseLabel }}</span>
       </div>
@@ -186,17 +186,15 @@ onUnmounted(() => {
 }
 
 .gauge-area {
-  position: relative;
-  width: 180px;
-  height: 110px;
   display: flex;
+  flex-direction: column;
   align-items: center;
-  justify-content: center;
+  gap: 0;
 }
 
 .gauge {
   width: 180px;
-  height: 110px;
+  height: 100px;
 }
 
 .gauge-bg {
@@ -208,15 +206,12 @@ onUnmounted(() => {
   transition: stroke-dasharray 300ms ease;
 }
 
-.gauge-value {
-  position: absolute;
-  bottom: 8px;
-  left: 50%;
-  transform: translateX(-50%);
+.gauge-text {
   text-align: center;
   display: flex;
   flex-direction: column;
   gap: 2px;
+  margin-top: -0.25rem;
 }
 
 .speed-number {

@@ -76,15 +76,11 @@ function deleteNote(id: string) {
           :checked="item.completed"
           @change="toggleComplete(item.id)"
         />
-        <div class="reminder-content">
+        <div class="reminder-content" :class="'priority-bar-' + (item.priority || 'medium')">
           <span class="reminder-text">{{ item.text }}</span>
         </div>
-        <span
-          v-if="item.priority && item.priority !== 'medium'"
-          class="reminder-priority"
-          :class="'priority-' + item.priority"
-        >
-          {{ item.priority }}
+        <span class="reminder-priority" :class="'priority-' + (item.priority || 'medium')">
+          {{ item.priority || 'medium' }}
         </span>
         <button class="reminder-delete" @click="deleteNote(item.id)" title="Delete">
           <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
@@ -149,7 +145,16 @@ function deleteNote(id: string) {
   cursor: pointer;
 }
 
-.reminder-content { flex: 1; min-width: 0; }
+.reminder-content {
+  flex: 1;
+  min-width: 0;
+  border-left: 3px solid transparent;
+  padding-left: 0.5rem;
+
+  &.priority-bar-high { border-left-color: var(--color-danger, #ef4444); }
+  &.priority-bar-medium { border-left-color: var(--color-primary, #6366f1); }
+  &.priority-bar-low { border-left-color: var(--color-text-muted, #888); }
+}
 .reminder-text { font-size: 0.875rem; color: var(--color-text); line-height: 1.4; }
 
 .reminder-priority {
@@ -162,6 +167,7 @@ function deleteNote(id: string) {
   border-radius: 4px;
 
   &.priority-high { color: var(--color-danger); background-color: var(--color-danger-dim); }
+  &.priority-medium { color: var(--color-primary); background-color: var(--color-primary-dim); }
   &.priority-low { color: var(--color-text-muted); background-color: var(--color-bg); }
 }
 
