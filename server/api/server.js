@@ -20,6 +20,10 @@ import { getFeedItems, isValidFeedUrl } from './rss.js'
 import { getHistory as getUptimeHistory, appendResults as appendUptimeResults } from './uptimeStore.js'
 import { discoverCalendars, fetchEvents } from './caldavClient.js'
 import { fetchProcesses } from './processClient.js'
+import { fetchSystemInfo } from './systemInfoClient.js'
+import { fetchServiceStatus } from './serviceStatusClient.js'
+import { fetchSystemLogs } from './systemLogsClient.js'
+import { fetchDatabaseMonitor } from './databaseMonitorClient.js'
 
 const app = express()
 const PORT = process.env.API_PORT || 48231
@@ -360,6 +364,70 @@ app.post('/api/uptime/check', express.json({ limit: '1mb' }), async (req, res) =
     res.json({ results })
   } catch (err) {
     sendError(res, 500, 'UPTIME_CHECK_FAILED', err instanceof Error ? err.message : 'Check failed')
+  }
+})
+
+// --- System Info endpoint ---
+
+app.get('/api/system-info', async (req, res) => {
+  try {
+    const { connectionId } = req.query
+    if (!connectionId) return sendError(res, 400, 'MISSING_CONNECTION', 'connectionId is required')
+    const info = await fetchSystemInfo(connectionId)
+    res.json(info)
+  } catch (err) {
+    sendError(res, 500, 'SYSTEM_INFO_FAILED', err instanceof Error ? err.message : 'Failed to fetch system info')
+  }
+})
+
+// --- Service Status endpoint ---
+
+app.get('/api/service-status', async (req, res) => {
+  try {
+    const { connectionId, services } = req.query
+    if (!connectionId) return sendError(res, 400, 'MISSING_CONNECTION', 'connectionId is required')
+    if (!services) return sendError(res, 400, 'MISSING_SERVICES', 'services is required')
+    const serviceList = services.split(',').map(s => s.trim()).filter(Boolean)
+    const result = await fetchServiceStatus(connectionId, serviceList)
+    res.json({ services: result })
+  } catch (err) {
+    sendError(res, 500, 'SERVICE_STATUS_FAILED', err instanceof Error ? err.message : 'Failed to fetch service status')
+  }
+})
+
+// --- System Logs endpoint ---
+
+app.get('/api/system-logs', async (req, res) => {
+  try {
+    const { connectionId, service, priority, lines } = req.query
+    if (!connectionId) return sendError(res, 400, 'MISSING_CONNECTION', 'connectionId is required')
+    const result = await fetchSystemLogs(connectionId, {
+      service: service || '',
+      priority: priority || 'info',
+      lines: lines ? parseInt(lines, 10) : 100
+    })
+    res.json(result)
+  } catch (err) {
+    sendError(res, 500, 'SYSTEM_LOGS_FAILED', err instanceof Error ? err.message : 'Failed to fetch logs')
+  }
+})
+
+// --- Database Monitor endpoint ---
+
+app.get('/api/database-monitor', async (req, res) => {
+  try {
+    const { connectionId, dbHost, dbPort, dbUser, dbPassword } = req.query
+    if (!connectionId) return sendError(res, 400, 'MISSING_CONNECTION', 'connectionId is required')
+    const result = await fetchDatabaseMonitor(connectionId, {
+      dbHost: dbHost || '127.0.0.1',
+      dbPort: dbPort ? parseInt(dbPort, 10) : 3306,
+      dbUser: dbUser || 'root',
+      dbPassword: dbPassword || ''
+    })
+    if (!result) return sendError(res, 500, 'DB_CONNECT_FAILED', 'Failed to connect to database')
+    res.json(result)
+  } catch (err) {
+    sendError(res, 500, 'DATABASE_MONITOR_FAILED', err instanceof Error ? err.message : 'Failed to fetch database stats')
   }
 })
 

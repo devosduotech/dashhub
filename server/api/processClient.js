@@ -1,42 +1,4 @@
-import { Client } from 'ssh2'
-import { readConfigSync } from './configManager.js'
-
-function getConnectionConfig(connId) {
-  try {
-    const config = readConfigSync()
-    for (const page of config.pages || []) {
-      for (const item of page.items || []) {
-        if (item.type === 'ssh' && item.config && Array.isArray(item.config.connections)) {
-          for (const conn of item.config.connections) {
-            if (conn.id === connId) return conn
-          }
-        }
-      }
-    }
-  } catch (e) {
-    console.error('[processes] Error reading config:', e.message)
-  }
-  return null
-}
-
-function buildSshConfig(connConfig) {
-  const sshConfig = {
-    host: connConfig.host,
-    port: connConfig.port || 22,
-    username: connConfig.username,
-    readyTimeout: 10000,
-    keepaliveInterval: 0
-  }
-  if (connConfig.authType === 'password' && connConfig.password) {
-    sshConfig.password = connConfig.password
-  } else if (connConfig.authType === 'key' && connConfig.privateKey) {
-    sshConfig.privateKey = connConfig.privateKey
-    if (connConfig.passphrase) sshConfig.passphrase = connConfig.passphrase
-  } else if (connConfig.authType === 'agent') {
-    sshConfig.agent = process.env.SSH_AUTH_SOCK
-  }
-  return sshConfig
-}
+import { runSshCommand } from './sshUtils.js'
 
 function parsePsOutput(stdout) {
   const lines = stdout.trim().split('\n')
@@ -62,51 +24,9 @@ function parsePsOutput(stdout) {
   return processes
 }
 
-export function fetchProcesses(connId, sortBy = 'cpu', sortOrder = 'desc', maxProcesses = 25) {
-  return new Promise((resolve, reject) => {
-    const connConfig = getConnectionConfig(connId)
-    if (!connConfig) {
-      return reject(new Error('SSH connection not found'))
-    }
-
-    const sortFlag = sortBy === 'mem' ? '-m' : sortBy === 'pid' ? '-n' : '-r'
-    const sortField = sortBy === 'mem' ? '%mem' : sortBy === 'pid' ? 'pid' : '%cpu'
-    const cmd = `ps aux --sort=${sortOrder === 'asc' ? '' : '-'}${sortField} | head -n ${maxProcesses + 1}`
-
-    const ssh = new Client()
-    const timer = setTimeout(() => {
-      ssh.end()
-      reject(new Error('SSH connection timed out'))
-    }, 15000)
-
-    ssh.on('ready', () => {
-      ssh.exec(cmd, (err, stream) => {
-        if (err) {
-          clearTimeout(timer)
-          ssh.end()
-          return reject(err)
-        }
-        let stdout = ''
-        let stderr = ''
-        stream.on('close', (code) => {
-          clearTimeout(timer)
-          ssh.end()
-          if (code !== 0) {
-            return reject(new Error(stderr || `Command exited with code ${code}`))
-          }
-          const processes = parsePsOutput(stdout)
-          resolve(processes)
-        })
-        stream.on('data', (data) => { stdout += data.toString() })
-        stream.stderr.on('data', (data) => { stderr += data.toString() })
-      })
-    })
-
-    ssh.on('error', (err) => {
-      clearTimeout(timer)
-      reject(err)
-    })
-
-    ssh.connect(buildSshConfig(connConfig))
-  })
+export async function fetchProcesses(connId, sortBy = 'cpu', sortOrder = 'desc', maxProcesses = 25) {
+  const sortField = sortBy === 'mem' ? '%mem' : sortBy === 'pid' ? 'pid' : '%cpu'
+  const cmd = `ps aux --sort=${sortOrder === 'asc' ? '' : '-'}${sortField} | head -n ${maxProcesses + 1}`
+  const stdout = await runSshCommand(connId, cmd)
+  return parsePsOutput(stdout)
 }

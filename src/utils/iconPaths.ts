@@ -596,5 +596,9 @@ export const WIDGET_ICONS: Record<string, IconName> = {
   weather: 'cloud',
   uptime: 'activity',
   calendar: 'calendar',
-  'process-list': 'cpu'
+  'process-list': 'cpu',
+  'system-info': 'server',
+  'service-status': 'power',
+  'system-logs': 'file',
+  'database-monitor': 'database'
 }

@@ -11,7 +11,8 @@ const DEFAULT_CONFIG_FILE = path.resolve(__dirname, '../../config/default.yml')
 
 const VALID_WIDGET_TYPES = new Set([
   'quick-links', 'glances', 'ssh', 'youtube', 'rss', 'iframe', 'clock', 'public-ip', 'latest-versions',
-  'notes', 'reminders', 'status-indicators', 'speedtest', 'weather', 'uptime', 'calendar', 'process-list'
+  'notes', 'reminders', 'status-indicators', 'speedtest', 'weather', 'uptime', 'calendar', 'process-list',
+  'system-info', 'service-status', 'system-logs', 'database-monitor'
 ])
 
 const VALID_AUTH_TYPES = new Set(['password', 'key', 'agent'])

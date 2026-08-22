@@ -16,6 +16,10 @@ export type WidgetType =
   | 'uptime'
   | 'calendar'
   | 'process-list'
+  | 'system-info'
+  | 'service-status'
+  | 'system-logs'
+  | 'database-monitor'
 
 export type SpeedtestServer =
   | 'cloudflare'
@@ -263,4 +267,36 @@ export interface ProcessListWidgetConfig extends WidgetConfig {
   sortOrder: 'desc' | 'asc'
   maxProcesses: number
   filterText: string
+}
+
+export interface SystemInfoWidgetConfig extends WidgetConfig {
+  connectionId: string
+  refreshInterval: number
+  showCpu: boolean
+  showMemory: boolean
+  showDisk: boolean
+  showNetwork: boolean
+}
+
+export interface ServiceStatusWidgetConfig extends WidgetConfig {
+  connectionId: string
+  services: Array<{ name: string; label?: string }>
+  refreshInterval: number
+}
+
+export interface SystemLogsWidgetConfig extends WidgetConfig {
+  connectionId: string
+  service: string
+  priority: string
+  lines: number
+  refreshInterval: number
+}
+
+export interface DatabaseMonitorWidgetConfig extends WidgetConfig {
+  connectionId: string
+  dbHost: string
+  dbPort: number
+  dbUser: string
+  dbPassword: string
+  refreshInterval: number
 }

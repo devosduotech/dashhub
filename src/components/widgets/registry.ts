@@ -165,6 +165,42 @@ export const widgetRegistry: Record<WidgetType, WidgetDefinition> = {
     settingsForm: () => import('@/components/widgets/ProcessListSettingsForm.vue'),
     defaultConfig: () => ({ connectionId: '', refreshInterval: 10, sortBy: 'cpu', sortOrder: 'desc', maxProcesses: 25, filterText: '' })
   },
+  'system-info': {
+    type: 'system-info',
+    label: 'System Info',
+    icon: '🖥️',
+    description: 'CPU, RAM, Disk, Network overview via SSH',
+    component: () => import('@/components/widgets/SystemInfoWidget.vue'),
+    settingsForm: () => import('@/components/widgets/SystemInfoSettingsForm.vue'),
+    defaultConfig: () => ({ connectionId: '', refreshInterval: 30, showCpu: true, showMemory: true, showDisk: true, showNetwork: true })
+  },
+  'service-status': {
+    type: 'service-status',
+    label: 'Service Status',
+    icon: '⚡',
+    description: 'Monitor systemd services via SSH',
+    component: () => import('@/components/widgets/ServiceStatusWidget.vue'),
+    settingsForm: () => import('@/components/widgets/ServiceStatusSettingsForm.vue'),
+    defaultConfig: () => ({ connectionId: '', services: [], refreshInterval: 30 })
+  },
+  'system-logs': {
+    type: 'system-logs',
+    label: 'System Logs',
+    icon: '📄',
+    description: 'View journalctl logs via SSH',
+    component: () => import('@/components/widgets/SystemLogsWidget.vue'),
+    settingsForm: () => import('@/components/widgets/SystemLogsSettingsForm.vue'),
+    defaultConfig: () => ({ connectionId: '', service: '', priority: 'info', lines: 100, refreshInterval: 30 })
+  },
+  'database-monitor': {
+    type: 'database-monitor',
+    label: 'Database Monitor',
+    icon: '🗄️',
+    description: 'Monitor MySQL/MariaDB via SSH',
+    component: () => import('@/components/widgets/DatabaseMonitorWidget.vue'),
+    settingsForm: () => import('@/components/widgets/DatabaseMonitorSettingsForm.vue'),
+    defaultConfig: () => ({ connectionId: '', dbHost: '127.0.0.1', dbPort: 3306, dbUser: 'root', dbPassword: '', refreshInterval: 30 })
+  },
 }
 
 export const widgetList = Object.values(widgetRegistry)
