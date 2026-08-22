@@ -4,7 +4,6 @@ import { Terminal } from '@xterm/xterm'
 import { FitAddon } from '@xterm/addon-fit'
 import { WebLinksAddon } from '@xterm/addon-web-links'
 import '@xterm/xterm/css/xterm.css'
-import type { SshConnection } from '@/types/config'
 import AppIcon from '@/components/ui/AppIcon.vue'
 
 const props = defineProps<{
