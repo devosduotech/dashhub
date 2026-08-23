@@ -76,23 +76,26 @@ function deleteNote(id: string) {
     </div>
 
     <div class="quick-add">
-      <textarea
-        v-model="newNoteText"
-        class="quick-add-input"
-        placeholder="Add a note..."
-        rows="1"
-        @keydown.enter.exact.prevent="addNote"
-        @input="autoResize"
-        ref="textareaRef"
-      ></textarea>
-      <select v-model="newNotePriority" class="quick-add-priority">
-        <option value="low">Low</option>
-        <option value="medium">Med</option>
-        <option value="high">High</option>
-      </select>
-      <button class="quick-add-btn" @click="addNote" :disabled="!newNoteText.trim()">
-        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
-      </button>
+      <div class="quick-add-row">
+        <textarea
+          v-model="newNoteText"
+          class="quick-add-input"
+          placeholder="Add a note..."
+          rows="1"
+          @keydown.enter.exact.prevent="addNote"
+          @input="autoResize"
+          ref="textareaRef"
+        ></textarea>
+        <select v-model="newNotePriority" class="quick-add-priority">
+          <option value="low">Low</option>
+          <option value="medium">Med</option>
+          <option value="high">High</option>
+        </select>
+        <button class="quick-add-btn" @click="addNote" :disabled="!newNoteText.trim()">
+          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+        </button>
+      </div>
+      <span class="quick-add-hint">Shift+Enter for new line, Enter to submit</span>
     </div>
   </div>
 </template>
@@ -164,11 +167,22 @@ function deleteNote(id: string) {
 
 .quick-add {
   display: flex;
-  align-items: center;
-  gap: 0.375rem;
+  flex-direction: column;
+  gap: 0.25rem;
   margin-top: 0.5rem;
   padding-top: 0.5rem;
   border-top: 1px solid var(--color-border);
+}
+
+.quick-add-row {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.375rem;
+}
+
+.quick-add-hint {
+  font-size: 0.6875rem;
+  color: var(--color-text-dim);
 }
 
 .quick-add-input {

@@ -90,6 +90,7 @@ function updateSortBy(value: string) {
         <div class="form-group">
           <label class="form-label">Text</label>
           <textarea v-model="editText" class="form-textarea" rows="3" placeholder="Write your note..."></textarea>
+          <span class="textarea-hint">Shift+Enter for new line, Enter to save</span>
         </div>
         <div class="form-group">
           <label class="form-label">Priority</label>
@@ -177,6 +178,11 @@ function updateSortBy(value: string) {
   resize: vertical;
   min-height: 4rem;
   font-family: inherit;
+}
+
+.textarea-hint {
+  font-size: 0.6875rem;
+  color: var(--color-text-dim);
 }
 
 .links-section {
