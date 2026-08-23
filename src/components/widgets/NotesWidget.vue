@@ -132,7 +132,7 @@ function deleteNote(id: string) {
 }
 
 .note-content { flex: 1; min-width: 0; }
-.note-text { font-size: 0.875rem; color: var(--color-text); line-height: 1.4; white-space: normal; word-break: break-word; }
+.note-text { font-size: 0.875rem; color: var(--color-text); line-height: 1.4; white-space: pre-wrap; word-break: break-word; }
 
 .note-priority {
   font-size: 0.6875rem;

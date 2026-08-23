@@ -4,6 +4,7 @@ import { useConfigStore } from '@/stores/config'
 import { uploadImage } from '@/services/uploads'
 import MediaPicker from '@/components/common/MediaPicker.vue'
 import AppIcon from '@/components/ui/AppIcon.vue'
+import { version } from '../../../package.json'
 
 const store = useConfigStore()
 
@@ -88,7 +89,6 @@ function onLogoSelected(value: string) {
         <div class="form-group">
           <label class="form-label">Theme</label>
           <select v-model="theme" class="form-select">
-            <option value="dark-navy">Dark Navy</option>
             <option value="dark">Dark</option>
             <option value="light">Light</option>
             <option value="auto">Auto (System)</option>
@@ -178,6 +178,7 @@ function onLogoSelected(value: string) {
       </div>
 
       <div class="modal-footer">
+        <span class="version-text">v{{ version }}</span>
         <button class="btn btn-secondary" @click="cancel">Cancel</button>
         <button class="btn btn-primary" @click="save">Save Settings</button>
       </div>
@@ -393,10 +394,17 @@ function onLogoSelected(value: string) {
 
 .modal-footer {
   display: flex;
+  align-items: center;
   justify-content: flex-end;
   gap: 0.5rem;
   padding: 1rem 1.25rem;
   border-top: 1px solid var(--color-border);
+}
+
+.version-text {
+  margin-right: auto;
+  font-size: 0.75rem;
+  color: var(--color-text-dim);
 }
 
 .btn {

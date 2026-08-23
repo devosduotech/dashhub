@@ -7,7 +7,7 @@ import { applyTheme } from '@/utils/theme'
 const DEFAULT_CONFIG: AppConfig = {
   appConfig: {
     title: 'OSDuo DashHub',
-    theme: 'dark-navy',
+    theme: 'dark',
     language: 'en',
     iconSet: 'material',
     defaultPage: 0
