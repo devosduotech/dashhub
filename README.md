@@ -4,13 +4,20 @@ A unified, modular, self-hosted dashboard platform combining server monitoring, 
 
 ## Features
 
-- **Server Monitoring** — Real-time metrics via Glances (CPU, memory, disk, network)
+- **Multi-Page Dashboards** — Create, rename, reorder, and delete dashboard pages via tabs
 - **SSH Terminal** — Web-based terminal with xterm.js, multi-tab, saved connections
 - **Process List** — Monitor server processes via SSH with sortable table
+- **System Info** — CPU, RAM, Disk, Network overview via SSH
+- **Service Status** — Monitor systemd services via SSH
+- **System Logs** — View journalctl logs via SSH
+- **Database Monitor** — Monitor MySQL/MariaDB via SSH
+- **Server Monitoring (Glances)** — Real-time metrics via Glances (CPU, memory, disk, network)
 - **Calendar (CalDAV)** — Month view and upcoming events from Nextcloud/CalDAV servers
-- **Notes & Reminders** — Personal notes with priority, task reminders with checkboxes
+- **Notes** — Personal notes with priority
+- **Reminders** — Task reminders with checkboxes
 - **Server Uptime** — Monitor endpoint availability with history bar
 - **Status Indicators** — Health dots for endpoints with latency display
+- **Latest Versions** — Track latest package versions (npm, GitHub, PyPI)
 - **YouTube** — Latest videos from channels via server-side RSS proxy
 - **RSS Feeds** — News and article aggregation
 - **Quick Links** — Customizable bookmarks with icons
@@ -19,7 +26,6 @@ A unified, modular, self-hosted dashboard platform combining server monitoring, 
 - **Clock** — Live-updating time and date
 - **Public IP** — Public IP address and location info
 - **IFrame** — Embed any web content
-- **Glances** — Server monitoring via Glances iframe
 
 ## Quick Start
 
