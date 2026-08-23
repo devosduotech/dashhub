@@ -11,7 +11,7 @@ const props = defineProps<{
   pageIndex: number
 }>()
 
-const emit = defineEmits<{ (e: 'refresh'): void }>()
+
 
 const store = useConfigStore()
 const showSettings = ref(false)
@@ -61,10 +61,6 @@ function removeWidget() {
   store.removeWidget(props.pageIndex, props.item.id)
 }
 
-function refresh() {
-  emit('refresh')
-}
-
 function moveToPage(toPageIndex: number) {
   store.moveWidgetBetweenPages(props.pageIndex, toPageIndex, props.item.id)
   store.setActivePage(toPageIndex)
@@ -107,11 +103,6 @@ const otherPages = computed(() => {
             >{{ page.name }}</button>
           </div>
         </div>
-        <button
-          class="widget-btn"
-          title="Refresh"
-          @click="refresh"
-        ><AppIcon name="refresh" :size="15" /></button>
         <button
           v-if="store.editMode"
           class="widget-btn widget-btn-danger"
