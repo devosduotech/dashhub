@@ -15,6 +15,8 @@ const DEFAULT_CONFIG: AppConfig = {
   pages: []
 }
 
+const ACTIVE_PAGE_KEY = 'dashhub-active-page'
+
 let saveTimer: ReturnType<typeof setTimeout> | null = null
 
 export const useConfigStore = defineStore('config', () => {
@@ -34,8 +36,16 @@ export const useConfigStore = defineStore('config', () => {
     config.appConfig = data.appConfig
     config.pages = data.pages
     assignColumns()
-    const defaultIdx = data.appConfig.defaultPage ?? 0
-    activePageIndex.value = Math.min(defaultIdx, config.pages.length - 1)
+    // Restore last active page from localStorage, fall back to defaultPage
+    let idx = 0
+    const saved = localStorage.getItem(ACTIVE_PAGE_KEY)
+    if (saved !== null) {
+      const parsed = parseInt(saved, 10)
+      if (!isNaN(parsed)) idx = parsed
+    } else {
+      idx = data.appConfig.defaultPage ?? 0
+    }
+    activePageIndex.value = Math.min(idx, config.pages.length - 1)
     if (activePageIndex.value < 0) activePageIndex.value = 0
   }
 
@@ -137,6 +147,7 @@ export const useConfigStore = defineStore('config', () => {
   function setActivePage(index: number) {
     if (index >= 0 && index < pages.value.length) {
       activePageIndex.value = index
+      localStorage.setItem(ACTIVE_PAGE_KEY, String(index))
     }
   }
 
@@ -149,6 +160,7 @@ export const useConfigStore = defineStore('config', () => {
     }
     pages.value.push(page)
     activePageIndex.value = pages.value.length - 1
+    localStorage.setItem(ACTIVE_PAGE_KEY, String(activePageIndex.value))
     debouncedSave()
     return page
   }
