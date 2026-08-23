@@ -17,14 +17,26 @@ const VALID_WIDGET_TYPES = new Set([
 
 const VALID_AUTH_TYPES = new Set(['password', 'key', 'agent'])
 
-// Fields that must never leave the backend via /api/config.
-const SECRET_FIELDS = ['password', 'privateKey', 'passphrase']
-
-// Only restore the secrets that match the connection's current auth type.
-const CREDENTIAL_FIELDS_BY_AUTH = {
-  password: ['password'],
-  key: ['privateKey', 'passphrase'],
-  agent: []
+// Generic secret-field registry. Every widget type that stores credentials,
+// tokens, API keys, or other secrets must register its fields here.
+// Fields listed here are never returned by GET /api/config and are
+// automatically preserved when omitted from PUT /api/config.
+const WIDGET_SECRET_FIELDS = {
+  ssh: {
+    fields: ['password', 'privateKey', 'passphrase'],
+    restoreBy: 'connection',
+    authTypeGated: true
+  },
+  calendar: {
+    fields: ['password'],
+    restoreBy: 'widget',
+    authTypeGated: false
+  },
+  'database-monitor': {
+    fields: ['dbPassword'],
+    restoreBy: 'widget',
+    authTypeGated: false
+  }
 }
 
 const LIMITS = {
@@ -94,8 +106,9 @@ function writeConfigSync(config) {
 }
 
 /**
- * Returns a deep copy of the config with all SSH secrets removed.
- * Connections that carry credentials expose only `hasCredential`.
+ * Returns a deep copy of the config with all secret fields removed.
+ * Credential-bearing items expose only `hasCredential` so the frontend
+ * knows a secret exists without seeing the value.
  */
 function sanitizeConfig(config) {
   const copy = JSON.parse(JSON.stringify(config || {}))
@@ -103,12 +116,23 @@ function sanitizeConfig(config) {
   for (const page of copy.pages) {
     if (!Array.isArray(page.items)) continue
     for (const item of page.items) {
-      if (item.type !== 'ssh' || !Array.isArray(item.config?.connections)) continue
-      for (const conn of item.config.connections) {
-        conn.hasCredential = SECRET_FIELDS.some(
-          (f) => typeof conn[f] === 'string' && conn[f].length > 0
+      const spec = WIDGET_SECRET_FIELDS[item.type]
+      if (!spec) continue
+
+      if (spec.restoreBy === 'connection') {
+        if (!Array.isArray(item.config?.connections)) continue
+        for (const conn of item.config.connections) {
+          conn.hasCredential = spec.fields.some(
+            (f) => typeof conn[f] === 'string' && conn[f].length > 0
+          )
+          for (const f of spec.fields) delete conn[f]
+        }
+      } else {
+        if (!item.config || typeof item.config !== 'object') continue
+        item.config.hasCredential = spec.fields.some(
+          (f) => typeof item.config[f] === 'string' && item.config[f].length > 0
         )
-        for (const f of SECRET_FIELDS) delete conn[f]
+        for (const f of spec.fields) delete item.config[f]
       }
     }
   }
@@ -117,36 +141,69 @@ function sanitizeConfig(config) {
 
 /**
  * When the client saves a sanitized config, restore previously stored secrets
- * for connections that still reference them via `hasCredential` but did not
- * supply new values. Restoration uses the immutable connection id only, and
- * only restores fields that match the connection's current auth type.
+ * for items that still reference them via `hasCredential` but did not supply
+ * new values.  Restoration uses the immutable item/connection id only.
+ * For SSH connections, restoration is gated by the current authType.
  */
 function preserveCredentials(incoming, existing) {
-  const byId = new Map()
+  // Pass 1 — index all existing secrets by their stable id
+  const widgetCreds = new Map()
+  const connCreds = new Map()
+
   for (const page of existing.pages || []) {
     for (const item of page.items || []) {
-      if (item.type !== 'ssh') continue
-      for (const conn of item.config?.connections || []) {
-        const creds = {}
-        for (const f of SECRET_FIELDS) {
-          if (typeof conn[f] === 'string' && conn[f].length > 0) creds[f] = conn[f]
+      const spec = WIDGET_SECRET_FIELDS[item.type]
+      if (!spec) continue
+
+      if (spec.restoreBy === 'connection') {
+        for (const conn of item.config?.connections || []) {
+          const creds = {}
+          for (const f of spec.fields) {
+            if (typeof conn[f] === 'string' && conn[f].length > 0) creds[f] = conn[f]
+          }
+          if (Object.keys(creds).length > 0 && conn.id) connCreds.set(conn.id, creds)
         }
-        if (Object.keys(creds).length === 0 || !conn.id) continue
-        byId.set(conn.id, creds)
+      } else {
+        const creds = {}
+        for (const f of spec.fields) {
+          if (typeof item.config?.[f] === 'string' && item.config[f].length > 0) creds[f] = item.config[f]
+        }
+        if (Object.keys(creds).length > 0 && item.id) widgetCreds.set(item.id, creds)
       }
     }
   }
+
+  // Pass 2 — restore secrets on the incoming config
   for (const page of incoming.pages || []) {
     for (const item of page.items || []) {
-      if (item.type !== 'ssh') continue
-      for (const conn of item.config?.connections || []) {
-        const wantsCredential = conn.hasCredential === true
-        delete conn.hasCredential
-        if (!wantsCredential || !conn.id) continue
-        const creds = byId.get(conn.id)
+      const spec = WIDGET_SECRET_FIELDS[item.type]
+      if (!spec) continue
+
+      if (spec.restoreBy === 'connection') {
+        for (const conn of item.config?.connections || []) {
+          const wantsCredential = conn.hasCredential === true
+          delete conn.hasCredential
+          if (!wantsCredential || !conn.id) continue
+          const creds = connCreds.get(conn.id)
+          if (!creds) continue
+          // When authType-gated, only restore fields that match the current auth type
+          const allowed = spec.authTypeGated
+            ? (conn.authType === 'password' ? ['password']
+              : conn.authType === 'key' ? ['privateKey', 'passphrase']
+              : [])
+            : spec.fields
+          for (const f of allowed) {
+            if (!conn[f] && creds[f]) conn[f] = creds[f]
+          }
+        }
+      } else {
+        const wantsCredential = item.config?.hasCredential === true
+        if (item.config) delete item.config.hasCredential
+        if (!wantsCredential || !item.id) continue
+        const creds = widgetCreds.get(item.id)
         if (!creds) continue
-        for (const f of CREDENTIAL_FIELDS_BY_AUTH[conn.authType] || []) {
-          if (!conn[f] && creds[f]) conn[f] = creds[f]
+        for (const f of spec.fields) {
+          if (!item.config[f] && creds[f]) item.config[f] = creds[f]
         }
       }
     }

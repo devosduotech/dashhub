@@ -238,6 +238,66 @@ describe('config API', () => {
     expect(res.body.error).toBe('CONFIG_READ_FAILED')
     expect(res.body.detail).toBeUndefined()
   })
+
+  it('GET /api/config sanitizes calendar password', async () => {
+    const cfg = validConfig()
+    cfg.pages[0].items.push({
+      id: 'item-cal', type: 'calendar', title: 'Cal',
+      config: { serverUrl: 'https://caldav.test', username: 'user', password: 'cal-secret',
+                calendarUrl: '/cal', displayName: 'Me', displayMode: 'upcoming',
+                eventCount: 10, refreshInterval: 300 }
+    })
+    writeConfig(cfg)
+    const res = await request(app).get('/api/config').expect(200)
+    const cal = res.body.pages[0].items.find(i => i.type === 'calendar')
+    expect(cal.config.password).toBeUndefined()
+    expect(cal.config.hasCredential).toBe(true)
+    expect(cal.config.username).toBe('user')
+  })
+
+  it('GET /api/config sanitizes database-monitor dbPassword', async () => {
+    const cfg = validConfig()
+    cfg.pages[0].items.push({
+      id: 'item-db', type: 'database-monitor', title: 'DB',
+      config: { connectionId: 'conn-1', dbHost: '127.0.0.1', dbPort: 3306,
+                dbUser: 'root', dbPassword: 'db-secret', refreshInterval: 30 }
+    })
+    writeConfig(cfg)
+    const res = await request(app).get('/api/config').expect(200)
+    const db = res.body.pages[0].items.find(i => i.type === 'database-monitor')
+    expect(db.config.dbPassword).toBeUndefined()
+    expect(db.config.hasCredential).toBe(true)
+    expect(db.config.dbUser).toBe('root')
+  })
+
+  it('PUT /api/config preserves calendar password through round-trip', async () => {
+    const cfg = validConfig()
+    cfg.pages[0].items.push({
+      id: 'item-cal', type: 'calendar', title: 'Cal',
+      config: { serverUrl: 'https://caldav.test', username: 'user', password: 'cal-secret',
+                calendarUrl: '/cal', displayName: 'Me', displayMode: 'upcoming',
+                eventCount: 10, refreshInterval: 300 }
+    })
+    writeConfig(cfg)
+    const sanitized = (await request(app).get('/api/config').expect(200)).body
+    await request(app).put('/api/config').send(sanitized).expect(200)
+    const raw = fs.readFileSync(CONFIG_FILE, 'utf8')
+    expect(raw).toContain('cal-secret')
+  })
+
+  it('PUT /api/config preserves database-monitor password through round-trip', async () => {
+    const cfg = validConfig()
+    cfg.pages[0].items.push({
+      id: 'item-db', type: 'database-monitor', title: 'DB',
+      config: { connectionId: 'conn-1', dbHost: '127.0.0.1', dbPort: 3306,
+                dbUser: 'root', dbPassword: 'db-secret', refreshInterval: 30 }
+    })
+    writeConfig(cfg)
+    const sanitized = (await request(app).get('/api/config').expect(200)).body
+    await request(app).put('/api/config').send(sanitized).expect(200)
+    const raw = fs.readFileSync(CONFIG_FILE, 'utf8')
+    expect(raw).toContain('db-secret')
+  })
 })
 
 describe('ssh connection lookup', () => {

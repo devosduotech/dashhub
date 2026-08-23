@@ -414,13 +414,13 @@ app.get('/api/system-logs', async (req, res) => {
 
 // --- Database Monitor endpoint ---
 
-app.get('/api/database-monitor', async (req, res) => {
+app.post('/api/database-monitor', express.json({ limit: '1mb' }), async (req, res) => {
   try {
-    const { connectionId, dbHost, dbPort, dbUser, dbPassword } = req.query
+    const { connectionId, dbHost, dbPort, dbUser, dbPassword } = req.body
     if (!connectionId) return sendError(res, 400, 'MISSING_CONNECTION', 'connectionId is required')
     const result = await fetchDatabaseMonitor(connectionId, {
       dbHost: dbHost || '127.0.0.1',
-      dbPort: dbPort ? parseInt(dbPort, 10) : 3306,
+      dbPort: dbPort ? parseInt(String(dbPort), 10) : 3306,
       dbUser: dbUser || 'root',
       dbPassword: dbPassword || ''
     })

@@ -39,7 +39,7 @@ Open http://localhost:48215
 ```bash
 docker run -d \
   --name dashhub \
-  -p 48215:3000 \
+  -p 48215:80 \
   -v "$PWD/data":/app/data \
   --restart unless-stopped \
   ghcr.io/devosduotech/dashhub:latest
@@ -89,7 +89,7 @@ All configuration is done through the web UI:
 | Tag | Description |
 |-----|-------------|
 | `latest` | Latest stable release |
-| `1.0.11` | Current release |
+| `1.0.14` | Current release |
 | `dev` | Development build |
 
 Available on [GitHub Container Registry](https://github.com/devosduotech/dashhub/pkgs/container/dashhub):

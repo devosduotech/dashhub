@@ -74,6 +74,70 @@ describe('sanitizeConfig', () => {
     expect(conn.passphrase).toBeUndefined()
     expect(conn.hasCredential).toBe(true)
   })
+
+  it('strips password from calendar widgets and sets hasCredential', () => {
+    const cfg = {
+      appConfig: { title: 'T', defaultPage: 0 },
+      pages: [{
+        id: 'page-1', name: 'Home',
+        items: [{
+          id: 'item-cal', type: 'calendar', title: 'Cal',
+          config: { serverUrl: 'https://caldav.test', username: 'user', password: 'cal-pw',
+                    calendarUrl: '/cal', displayName: 'Me', displayMode: 'upcoming',
+                    eventCount: 10, refreshInterval: 300 }
+        }]
+      }]
+    }
+    const sanitized = sanitizeConfig(cfg)
+    const item = sanitized.pages[0].items[0]
+    expect(item.config.password).toBeUndefined()
+    expect(item.config.hasCredential).toBe(true)
+    expect(item.config.username).toBe('user')
+    expect(item.config.serverUrl).toBe('https://caldav.test')
+  })
+
+  it('strips dbPassword from database-monitor widgets and sets hasCredential', () => {
+    const cfg = {
+      appConfig: { title: 'T', defaultPage: 0 },
+      pages: [{
+        id: 'page-1', name: 'Home',
+        items: [{
+          id: 'item-db', type: 'database-monitor', title: 'DB',
+          config: { connectionId: 'conn-1', dbHost: '127.0.0.1', dbPort: 3306,
+                    dbUser: 'root', dbPassword: 'db-secret', refreshInterval: 30 }
+        }]
+      }]
+    }
+    const sanitized = sanitizeConfig(cfg)
+    const item = sanitized.pages[0].items[0]
+    expect(item.config.dbPassword).toBeUndefined()
+    expect(item.config.hasCredential).toBe(true)
+    expect(item.config.dbUser).toBe('root')
+    expect(item.config.dbHost).toBe('127.0.0.1')
+  })
+
+  it('sanitizes mixed configs with SSH, calendar, and database-monitor', () => {
+    const cfg = baseConfig()
+    cfg.pages[0].items.push(
+      { id: 'item-cal', type: 'calendar', title: 'Cal',
+        config: { serverUrl: 'https://caldav.test', username: 'u', password: 'cal-pw',
+                  calendarUrl: '/cal', displayName: 'Me', displayMode: 'upcoming',
+                  eventCount: 10, refreshInterval: 300 } },
+      { id: 'item-db', type: 'database-monitor', title: 'DB',
+        config: { connectionId: 'conn-1', dbHost: '127.0.0.1', dbPort: 3306,
+                  dbUser: 'root', dbPassword: 'db-pw', refreshInterval: 30 } }
+    )
+    const sanitized = sanitizeConfig(cfg)
+    // SSH
+    expect(sanitized.pages[0].items[0].config.connections[0].password).toBeUndefined()
+    expect(sanitized.pages[0].items[0].config.connections[0].hasCredential).toBe(true)
+    // Calendar
+    expect(sanitized.pages[0].items[1].config.password).toBeUndefined()
+    expect(sanitized.pages[0].items[1].config.hasCredential).toBe(true)
+    // Database Monitor
+    expect(sanitized.pages[0].items[2].config.dbPassword).toBeUndefined()
+    expect(sanitized.pages[0].items[2].config.hasCredential).toBe(true)
+  })
 })
 
 describe('preserveCredentials', () => {
@@ -143,6 +207,85 @@ describe('preserveCredentials', () => {
 
     const c2 = restored.pages[0].items[0].config.connections[2]
     expect(c2.password).toBeUndefined()
+  })
+
+  it('restores calendar password when hasCredential is true and field is empty', () => {
+    const existing = {
+      appConfig: { title: 'T', defaultPage: 0 },
+      pages: [{
+        id: 'page-1', name: 'Home',
+        items: [{
+          id: 'item-cal', type: 'calendar', title: 'Cal',
+          config: { serverUrl: 'https://caldav.test', username: 'user', password: 'cal-pw',
+                    calendarUrl: '/cal', displayName: 'Me', displayMode: 'upcoming',
+                    eventCount: 10, refreshInterval: 300 }
+        }]
+      }]
+    }
+    const incoming = sanitizeConfig(existing)
+    // Password should be stripped, hasCredential should be true
+    expect(incoming.pages[0].items[0].config.password).toBeUndefined()
+    expect(incoming.pages[0].items[0].config.hasCredential).toBe(true)
+    const restored = preserveCredentials(incoming, existing)
+    expect(restored.pages[0].items[0].config.password).toBe('cal-pw')
+    expect(restored.pages[0].items[0].config.hasCredential).toBeUndefined()
+  })
+
+  it('restores database-monitor password when hasCredential is true and field is empty', () => {
+    const existing = {
+      appConfig: { title: 'T', defaultPage: 0 },
+      pages: [{
+        id: 'page-1', name: 'Home',
+        items: [{
+          id: 'item-db', type: 'database-monitor', title: 'DB',
+          config: { connectionId: 'conn-1', dbHost: '127.0.0.1', dbPort: 3306,
+                    dbUser: 'root', dbPassword: 'db-secret', refreshInterval: 30 }
+        }]
+      }]
+    }
+    const incoming = sanitizeConfig(existing)
+    expect(incoming.pages[0].items[0].config.dbPassword).toBeUndefined()
+    expect(incoming.pages[0].items[0].config.hasCredential).toBe(true)
+    const restored = preserveCredentials(incoming, existing)
+    expect(restored.pages[0].items[0].config.dbPassword).toBe('db-secret')
+    expect(restored.pages[0].items[0].config.hasCredential).toBeUndefined()
+  })
+
+  it('does not overwrite a newly supplied calendar password', () => {
+    const existing = {
+      appConfig: { title: 'T', defaultPage: 0 },
+      pages: [{
+        id: 'page-1', name: 'Home',
+        items: [{
+          id: 'item-cal', type: 'calendar', title: 'Cal',
+          config: { serverUrl: 'https://caldav.test', username: 'user', password: 'old-pw',
+                    calendarUrl: '/cal', displayName: 'Me', displayMode: 'upcoming',
+                    eventCount: 10, refreshInterval: 300 }
+        }]
+      }]
+    }
+    const incoming = sanitizeConfig(existing)
+    incoming.pages[0].items[0].config.password = 'new-pw'
+    const restored = preserveCredentials(incoming, existing)
+    expect(restored.pages[0].items[0].config.password).toBe('new-pw')
+  })
+
+  it('does not overwrite a newly supplied database-monitor password', () => {
+    const existing = {
+      appConfig: { title: 'T', defaultPage: 0 },
+      pages: [{
+        id: 'page-1', name: 'Home',
+        items: [{
+          id: 'item-db', type: 'database-monitor', title: 'DB',
+          config: { connectionId: 'conn-1', dbHost: '127.0.0.1', dbPort: 3306,
+                    dbUser: 'root', dbPassword: 'old-db', refreshInterval: 30 }
+        }]
+      }]
+    }
+    const incoming = sanitizeConfig(existing)
+    incoming.pages[0].items[0].config.dbPassword = 'new-db'
+    const restored = preserveCredentials(incoming, existing)
+    expect(restored.pages[0].items[0].config.dbPassword).toBe('new-db')
   })
 })
 

@@ -13,13 +13,17 @@ export async function fetchDatabaseMonitor(
   connectionId: string,
   options: { dbHost?: string; dbPort?: number; dbUser?: string; dbPassword?: string } = {}
 ): Promise<DatabaseStats> {
-  const params = new URLSearchParams({ connectionId })
-  if (options.dbHost) params.set('dbHost', options.dbHost)
-  if (options.dbPort) params.set('dbPort', String(options.dbPort))
-  if (options.dbUser) params.set('dbUser', options.dbUser)
-  if (options.dbPassword) params.set('dbPassword', options.dbPassword)
-
-  const res = await fetch(`/api/database-monitor?${params}`)
+  const res = await fetch('/api/database-monitor', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      connectionId,
+      dbHost: options.dbHost,
+      dbPort: options.dbPort,
+      dbUser: options.dbUser,
+      dbPassword: options.dbPassword
+    })
+  })
   if (!res.ok) {
     const data = await res.json().catch(() => ({}))
     throw new Error(data.message || `Failed to fetch database stats: HTTP ${res.status}`)
