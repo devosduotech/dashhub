@@ -6,8 +6,6 @@ DashHub brings server monitoring, SSH access, system administration, productivit
 
 Designed for **local and trusted private-LAN deployments**, DashHub runs on your own infrastructure using Docker.
 
-![DashHub Dashboard](docs/images/dashhub-dashboard.png)
-
 ## Why DashHub?
 
 DashHub is designed for people who manage multiple servers, services, applications, and operational resources and want a single workspace instead of maintaining dozens of browser tabs.
