@@ -271,9 +271,8 @@ function updateSortBy(value: string) {
   font-weight: 500;
   font-size: 0.875rem;
   color: var(--color-text);
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
+  white-space: pre-wrap;
+  word-break: break-word;
 
   &.line-through {
     text-decoration: line-through;

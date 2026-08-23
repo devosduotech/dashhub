@@ -17,6 +17,14 @@ const sortBy = computed(() => cfg.value.sortBy || 'created')
 
 const newNoteText = ref('')
 const newNotePriority = ref<'low' | 'medium' | 'high'>('medium')
+const textareaRef = ref<HTMLTextAreaElement | null>(null)
+
+function autoResize() {
+  const el = textareaRef.value
+  if (!el) return
+  el.style.height = 'auto'
+  el.style.height = Math.min(el.scrollHeight, 120) + 'px'
+}
 
 const sortedItems = computed(() => {
   const arr = [...items.value]
@@ -68,13 +76,15 @@ function deleteNote(id: string) {
     </div>
 
     <div class="quick-add">
-      <input
+      <textarea
         v-model="newNoteText"
-        type="text"
         class="quick-add-input"
         placeholder="Add a note..."
-        @keydown.enter="addNote"
-      />
+        rows="1"
+        @keydown.enter.exact.prevent="addNote"
+        @input="autoResize"
+        ref="textareaRef"
+      ></textarea>
       <select v-model="newNotePriority" class="quick-add-priority">
         <option value="low">Low</option>
         <option value="medium">Med</option>
@@ -170,6 +180,11 @@ function deleteNote(id: string) {
   color: var(--color-text);
   font-size: 0.8125rem;
   min-width: 0;
+  font-family: inherit;
+  resize: none;
+  overflow-y: auto;
+  line-height: 1.4;
+  max-height: 120px;
 
   &:focus { outline: none; border-color: var(--color-primary); }
   &::placeholder { color: var(--color-text-dim); }
