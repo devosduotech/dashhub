@@ -89,7 +89,7 @@ All configuration is done through the web UI:
 | Tag | Description |
 |-----|-------------|
 | `latest` | Latest stable release |
-| `1.0.14` | Current release |
+| `1.0.15` | Current release |
 | `dev` | Development build |
 
 Available on [GitHub Container Registry](https://github.com/devosduotech/dashhub/pkgs/container/dashhub):
