@@ -1,5 +1,6 @@
 <script setup lang="ts">
-import { widgetList } from './registry'
+import { computed } from 'vue'
+import { widgetList, type WidgetCategory } from './registry'
 import type { WidgetType } from '@/types/config'
 import { useConfigStore } from '@/stores/config'
 import { WIDGET_ICONS } from '@/utils/iconPaths'
@@ -12,6 +13,25 @@ const props = defineProps<{
 const emit = defineEmits<{ (e: 'close'): void }>()
 
 const store = useConfigStore()
+
+const CATEGORY_LABELS: Record<WidgetCategory, string> = {
+  infrastructure: 'Infrastructure',
+  productivity: 'Productivity',
+  network: 'Network',
+  content: 'Content',
+  general: 'General'
+}
+
+const CATEGORY_ORDER: WidgetCategory[] = ['infrastructure', 'productivity', 'network', 'content', 'general']
+
+const groupedWidgets = computed(() => {
+  const groups = new Map<WidgetCategory, typeof widgetList>()
+  for (const cat of CATEGORY_ORDER) groups.set(cat, [])
+  for (const w of widgetList) {
+    groups.get(w.category)!.push(w)
+  }
+  return groups
+})
 
 function addWidget(type: WidgetType) {
   const def = widgetList.find((w) => w.type === type)
@@ -32,20 +52,25 @@ function addWidget(type: WidgetType) {
           </button>
         </div>
         <div class="palette-list">
-          <button
-            v-for="w in widgetList"
-            :key="w.type"
-            class="palette-item"
-            @click="addWidget(w.type)"
-          >
-            <span class="palette-icon">
-              <AppIcon :name="WIDGET_ICONS[w.type] || 'dashboard'" :size="18" />
-            </span>
-            <span class="palette-info">
-              <span class="palette-label">{{ w.label }}</span>
-              <span class="palette-desc">{{ w.description }}</span>
-            </span>
-          </button>
+          <template v-for="cat in CATEGORY_ORDER" :key="cat">
+            <div v-if="groupedWidgets.get(cat)!.length > 0" class="palette-category">
+              <span class="palette-category-label">{{ CATEGORY_LABELS[cat] }}</span>
+            </div>
+            <button
+              v-for="w in groupedWidgets.get(cat)"
+              :key="w.type"
+              class="palette-item"
+              @click="addWidget(w.type)"
+            >
+              <span class="palette-icon">
+                <AppIcon :name="WIDGET_ICONS[w.type] || 'dashboard'" :size="18" />
+              </span>
+              <span class="palette-info">
+                <span class="palette-label">{{ w.label }}</span>
+                <span class="palette-desc">{{ w.description }}</span>
+              </span>
+            </button>
+          </template>
         </div>
       </div>
     </div>
@@ -121,6 +146,18 @@ function addWidget(type: WidgetType) {
   display: flex;
   flex-direction: column;
   gap: 0.375rem;
+}
+
+.palette-category {
+  padding: 0.5rem 0.75rem 0.25rem;
+}
+
+.palette-category-label {
+  font-size: 0.6875rem;
+  font-weight: 600;
+  color: var(--color-text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
 }
 
 .palette-item {

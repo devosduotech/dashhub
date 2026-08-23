@@ -1,22 +1,26 @@
-import axios from 'axios'
 import type { AppConfig } from '@/types/config'
 
-const api = axios.create({
-  baseURL: '/api',
-  headers: { 'Content-Type': 'application/json' },
-  timeout: 10000
-})
-
 export async function fetchConfig(): Promise<AppConfig> {
-  const { data } = await api.get<AppConfig>('/config')
-  return data
+  const res = await fetch('/api/config')
+  if (!res.ok) throw new Error(`Failed to fetch config: HTTP ${res.status}`)
+  return res.json()
 }
 
 export async function saveConfig(config: AppConfig): Promise<void> {
-  await api.put('/config', config)
+  const res = await fetch('/api/config', {
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(config)
+  })
+  if (!res.ok) throw new Error(`Failed to save config: HTTP ${res.status}`)
 }
 
 export async function validateConfig(config: AppConfig): Promise<{ valid: boolean; errors: string[] }> {
-  const { data } = await api.post<{ valid: boolean; errors: string[] }>('/config/validate', config)
-  return data
+  const res = await fetch('/api/config/validate', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(config)
+  })
+  if (!res.ok) throw new Error(`Failed to validate config: HTTP ${res.status}`)
+  return res.json()
 }

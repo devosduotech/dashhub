@@ -1,5 +1,3 @@
-import axios from 'axios'
-
 export interface UploadEntry {
   name: string
   url: string
@@ -7,23 +5,23 @@ export interface UploadEntry {
   addedAt: string
 }
 
-const api = axios.create({
-  baseURL: '/api',
-  timeout: 15000
-})
-
 export async function listUploads(): Promise<UploadEntry[]> {
-  const { data } = await api.get<UploadEntry[]>('/uploads')
-  return data
+  const res = await fetch('/api/uploads')
+  if (!res.ok) throw new Error(`Failed to list uploads: HTTP ${res.status}`)
+  return res.json()
 }
 
 export async function uploadImage(file: File): Promise<UploadEntry> {
-  const { data } = await api.post<UploadEntry>('/uploads', file, {
-    headers: { 'Content-Type': file.type || 'application/octet-stream' }
+  const res = await fetch('/api/uploads', {
+    method: 'POST',
+    headers: { 'Content-Type': file.type || 'application/octet-stream' },
+    body: file
   })
-  return data
+  if (!res.ok) throw new Error(`Failed to upload: HTTP ${res.status}`)
+  return res.json()
 }
 
 export async function deleteUpload(name: string): Promise<void> {
-  await api.delete(`/uploads/${name}`)
+  const res = await fetch(`/api/uploads/${name}`, { method: 'DELETE' })
+  if (!res.ok) throw new Error(`Failed to delete upload: HTTP ${res.status}`)
 }
