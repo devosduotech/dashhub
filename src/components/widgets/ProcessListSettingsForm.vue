@@ -18,6 +18,9 @@ const sortBy = ref(cfg.value.sortBy || 'cpu')
 const sortOrder = ref(cfg.value.sortOrder || 'desc')
 const maxProcesses = ref(cfg.value.maxProcesses || 25)
 const filterText = ref(cfg.value.filterText || '')
+const viewMode = ref(cfg.value.viewMode || 'all')
+const selectedProcesses = ref<string[]>(cfg.value.selectedProcesses || [])
+const newProcess = ref('')
 
 const sshConnections = computed<SshConnection[]>(() => {
   const conns: SshConnection[] = []
@@ -63,6 +66,25 @@ function onMaxProcessesChange(val: string) {
 function onFilterChange(val: string) {
   filterText.value = val
   update({ filterText: val })
+}
+
+function onViewModeChange(val: string) {
+  viewMode.value = val as 'all' | 'selected'
+  update({ viewMode: val as 'all' | 'selected' })
+}
+
+function addProcess() {
+  if (!newProcess.value.trim()) return
+  const list = [...selectedProcesses.value, newProcess.value.trim()]
+  selectedProcesses.value = list
+  update({ selectedProcesses: list })
+  newProcess.value = ''
+}
+
+function removeProcess(index: number) {
+  const list = selectedProcesses.value.filter((_, i) => i !== index)
+  selectedProcesses.value = list
+  update({ selectedProcesses: list })
 }
 </script>
 
@@ -117,6 +139,32 @@ function onFilterChange(val: string) {
     </div>
 
     <div class="form-group">
+      <label class="form-label">View Mode</label>
+      <select class="form-select" :value="viewMode" @change="onViewModeChange(($event.target as HTMLSelectElement).value)">
+        <option value="all">All Processes</option>
+        <option value="selected">Selected Processes</option>
+      </select>
+    </div>
+
+    <div v-if="viewMode === 'selected'" class="form-group">
+      <label class="form-label">Monitored Processes</label>
+      <div class="process-list">
+        <div v-for="(proc, i) in selectedProcesses" :key="i" class="process-item">
+          <span class="process-name">{{ proc }}</span>
+          <button class="remove-btn" @click="removeProcess(i)"><span>&times;</span></button>
+        </div>
+        <div v-if="selectedProcesses.length === 0" class="empty-hint">
+          No processes selected. Add process names below.
+        </div>
+      </div>
+      <div class="add-process">
+        <input class="form-input" type="text" v-model="newProcess" placeholder="e.g. nginx, gunicorn, python3" @keyup.enter="addProcess" />
+        <button class="btn btn-small btn-primary" @click="addProcess">+ Add</button>
+      </div>
+      <p class="form-hint">Enter process names to monitor (partial match works)</p>
+    </div>
+
+    <div class="form-group">
       <label class="form-label">Filter</label>
       <input class="form-input" type="text" :value="filterText" placeholder="Filter by name, command, or user..." @input="onFilterChange(($event.target as HTMLInputElement).value)" />
     </div>
@@ -144,4 +192,29 @@ function onFilterChange(val: string) {
 }
 
 .form-hint { margin: 0; font-size: 0.75rem; color: var(--color-text-muted); line-height: 1.4; }
+
+.process-list { display: flex; flex-direction: column; gap: 0.25rem; margin-bottom: 0.5rem; }
+.process-item {
+  display: flex; align-items: center; gap: 0.5rem;
+  padding: 0.375rem 0.5rem; background-color: var(--color-bg-elevated);
+  border: 1px solid var(--color-border); border-radius: 4px;
+}
+.process-name { font-size: 0.8125rem; color: var(--color-text); flex: 1; }
+.remove-btn {
+  display: inline-flex; align-items: center; justify-content: center;
+  width: 1.25rem; height: 1.25rem; border: none; background: none;
+  color: var(--color-text-dim); cursor: pointer; border-radius: 3px;
+  &:hover { background-color: var(--color-danger-dim); color: var(--color-danger); }
+}
+.empty-hint { padding: 0.75rem; text-align: center; color: var(--color-text-dim); font-size: 0.75rem; border: 1px dashed var(--color-border); border-radius: 4px; }
+.add-process { display: flex; gap: 0.5rem; align-items: center; }
+.btn {
+  padding: 0.5rem 0.75rem; border-radius: 6px; font-size: 0.8125rem;
+  cursor: pointer; border: 1px solid var(--color-border); white-space: nowrap;
+}
+.btn-small { padding: 0.375rem 0.625rem; font-size: 0.75rem; }
+.btn-primary {
+  background-color: var(--color-primary); border-color: var(--color-primary);
+  color: white; &:hover { opacity: 0.9; }
+}
 </style>

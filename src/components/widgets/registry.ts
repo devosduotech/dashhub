@@ -163,7 +163,7 @@ export const widgetRegistry: Record<WidgetType, WidgetDefinition> = {
     description: 'Monitor server processes via SSH',
     component: () => import('@/components/widgets/ProcessListWidget.vue'),
     settingsForm: () => import('@/components/widgets/ProcessListSettingsForm.vue'),
-    defaultConfig: () => ({ connectionId: '', refreshInterval: 10, sortBy: 'cpu', sortOrder: 'desc', maxProcesses: 25, filterText: '' })
+    defaultConfig: () => ({ connectionId: '', refreshInterval: 10, sortBy: 'cpu', sortOrder: 'desc', maxProcesses: 25, filterText: '', viewMode: 'all', selectedProcesses: [] })
   },
   'system-info': {
     type: 'system-info',

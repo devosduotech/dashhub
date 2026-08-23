@@ -267,6 +267,8 @@ export interface ProcessListWidgetConfig extends WidgetConfig {
   sortOrder: 'desc' | 'asc'
   maxProcesses: number
   filterText: string
+  viewMode: 'all' | 'selected'
+  selectedProcesses: string[]
 }
 
 export interface SystemInfoWidgetConfig extends WidgetConfig {

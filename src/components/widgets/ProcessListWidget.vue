@@ -18,13 +18,23 @@ const sortOrder = ref<'desc' | 'asc'>(cfg.value.sortOrder || 'desc')
 let refreshTimer: ReturnType<typeof setInterval> | null = null
 
 const filteredProcesses = computed(() => {
+  let list = processes.value
+
+  if (cfg.value.viewMode === 'selected' && cfg.value.selectedProcesses?.length) {
+    const selected = cfg.value.selectedProcesses.map(s => s.toLowerCase())
+    list = list.filter(p => selected.some(s => p.name.toLowerCase().includes(s)))
+  }
+
   const filter = (cfg.value.filterText || '').toLowerCase()
-  if (!filter) return processes.value
-  return processes.value.filter(p =>
-    p.name.toLowerCase().includes(filter) ||
-    p.command.toLowerCase().includes(filter) ||
-    p.user.toLowerCase().includes(filter)
-  )
+  if (filter) {
+    list = list.filter(p =>
+      p.name.toLowerCase().includes(filter) ||
+      p.command.toLowerCase().includes(filter) ||
+      p.user.toLowerCase().includes(filter)
+    )
+  }
+
+  return list
 })
 
 const totalCpu = computed(() => processes.value.reduce((sum, p) => sum + p.cpu, 0).toFixed(1))

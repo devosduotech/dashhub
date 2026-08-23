@@ -21,8 +21,8 @@ function parseServiceOutput(stdout) {
 }
 
 export async function fetchServiceStatus(connId, services) {
-  const serviceList = services.join(' ')
-  const cmd = `for s in ${serviceList}; do STATUS=$(systemctl is-active "$s" 2>/dev/null || echo "unknown"); SINCE=$(systemctl show "$s" --property=ActiveEnterTimestamp --value 2>/dev/null || echo ""); echo "$s|$STATUS|$SINCE"; done`
-  const stdout = await runSshCommand(connId, cmd)
+  const serviceList = services.map(s => `"${s}"`).join(' ')
+  const cmd = `for s in ${serviceList}; do STATUS=$(systemctl is-active "$s" 2>/dev/null); RC=$?; if [ $RC -ne 0 ]; then STATUS="inactive"; fi; SINCE=$(systemctl show "$s" --property=ActiveEnterTimestamp --value 2>/dev/null || echo ""); printf '%s|%s|%s\n' "$s" "$STATUS" "$SINCE"; done`
+  const stdout = await runSshCommand(connId, cmd, 30000)
   return parseServiceOutput(stdout)
 }

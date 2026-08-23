@@ -114,7 +114,6 @@ function initTerminal(tab: TabState) {
   })
   tab.resizeObserver.observe(tab.containerEl)
 
-  tab.term.write('Connecting...\r\n')
   connectTab(tab)
 }
 
