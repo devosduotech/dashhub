@@ -1,46 +1,99 @@
 # OSDuo DashHub
 
-A unified, modular, self-hosted dashboard platform combining server monitoring, SSH terminal access, calendar, process management, and media aggregation.
+**A local-first, self-hosted operations dashboard for infrastructure, servers, productivity, and everyday tools.**
+
+DashHub brings server monitoring, SSH access, system administration, productivity tools, service health, useful links, and information feeds into a single customizable workspace.
+
+Designed for **local and trusted private-LAN deployments**, DashHub runs on your own infrastructure using Docker.
+
+![DashHub Dashboard](docs/images/dashhub-dashboard.png)
+
+## Why DashHub?
+
+DashHub is designed for people who manage multiple servers, services, applications, and operational resources and want a single workspace instead of maintaining dozens of browser tabs.
+
+Instead of replacing your existing tools, DashHub brings them together:
+
+- Monitor your servers
+- Open SSH sessions
+- Check service health
+- Access frequently used applications
+- Track infrastructure information
+- Keep notes, reminders, and calendar events
+- Follow RSS feeds and YouTube channels
+- Customize the workspace around your workflow
 
 ## Features
 
-- **Multi-Page Dashboards** — Create, rename, reorder, and delete dashboard pages via tabs
-- **SSH Terminal** — Web-based terminal with xterm.js, multi-tab, saved connections
-- **Process List** — Monitor server processes via SSH with sortable table
-- **System Info** — CPU, RAM, Disk, Network overview via SSH
-- **Service Status** — Monitor systemd services via SSH
-- **System Logs** — View journalctl logs via SSH
-- **Database Monitor** — Monitor MySQL/MariaDB via SSH
-- **Server Monitoring (Glances)** — Real-time metrics via Glances (CPU, memory, disk, network)
-- **Calendar (CalDAV)** — Month view and upcoming events from Nextcloud/CalDAV servers
+### Dashboard
+
+- **Multi-Page Dashboards** — Create, rename, reorder, and delete dashboard pages
+- **Customizable Layouts** — Arrange widgets across multiple columns
+- **Drag & Drop** — Move widgets within and between columns
+- **Edit Mode** — Configure dashboards directly from the UI
+- **Themes & Branding** — Theme-aware interface with reusable icons and branding
+
+### Infrastructure & Server Management
+
+- **SSH Terminal** — Web-based terminal with xterm.js and saved SSH connections
+- **Process List** — Monitor server processes through SSH with sortable tables
+- **System Info** — CPU, RAM, disk, and network information through SSH
+- **Service Status** — Monitor systemd services through SSH
+- **System Logs** — View journalctl logs through SSH
+- **Database Monitor** — Monitor MySQL/MariaDB databases through SSH
+- **Server Monitoring** — Real-time CPU, memory, disk, and network metrics using Glances
+- **Server Uptime** — Monitor endpoint availability with history
+- **Status Indicators** — Endpoint health and latency indicators
+
+### Productivity
+
+- **Calendar** — Month view and upcoming events from Nextcloud/CalDAV
 - **Notes** — Personal notes with priority
-- **Reminders** — Task reminders with checkboxes
-- **Server Uptime** — Monitor endpoint availability with history bar
-- **Status Indicators** — Health dots for endpoints with latency display
-- **Latest Versions** — Track latest package versions (npm, GitHub, PyPI)
-- **YouTube** — Latest videos from channels via server-side RSS proxy
-- **RSS Feeds** — News and article aggregation
-- **Quick Links** — Customizable bookmarks with icons
-- **Speedtest** — Network speed test (ping, download, upload)
+- **Reminders** — Task reminders with completion tracking
+- **Clock** — Live time and date display
+
+### Network & Utilities
+
+- **Public IP** — Public IP and location information
+- **Speedtest** — Network latency, download, and upload testing
 - **Weather** — Current conditions and forecast
-- **Clock** — Live-updating time and date
-- **Public IP** — Public IP address and location info
-- **IFrame** — Embed any web content
+- **Latest Versions** — Track package versions from npm, GitHub, and PyPI
+
+### Information & Resources
+
+- **Quick Links** — Customizable bookmarks with categories and icons
+- **RSS Feeds** — News and article aggregation
+- **YouTube** — Latest videos from selected channels
+- **IFrame** — Embed compatible web applications and web content
+
+## Self-Hosted
+
+DashHub is designed to run on your own infrastructure.
+
+- Local-first architecture
+- No hosted DashHub account required
+- Persistent local configuration
+- Docker and Docker Compose
+- Linux AMD64 images
+- GitHub Container Registry
+- Suitable for personal and trusted private-LAN environments
+
+> **Deployment boundary:** DashHub v1.x is currently designed for local and trusted private-LAN use. Public Internet and shared multi-user deployment require additional security hardening planned for a future phase.
 
 ## Quick Start
 
-### Docker (recommended)
+### Docker Compose — Recommended
 
 ```bash
 mkdir dashhub && cd dashhub
 mkdir data
-curl -O https://raw.githubusercontent.com/devosduotech/dashhub/v1/docker-compose.yml
+curl -O https://raw.githubusercontent.com/devosduotech/dashhub/v1.0.17/docker-compose.yml
 docker compose up -d
 ```
 
 Open http://localhost:48215
 
-### Run the image directly
+### Docker Image
 
 ```bash
 docker run -d \
@@ -48,10 +101,10 @@ docker run -d \
   -p 48215:80 \
   -v "$PWD/data":/app/data \
   --restart unless-stopped \
-  ghcr.io/devosduotech/dashhub:latest
+  ghcr.io/devosduotech/dashhub:1.0.17
 ```
 
-### Build from source
+### Build from Source
 
 ```bash
 git clone https://github.com/devosduotech/dashhub.git
@@ -64,45 +117,67 @@ Open http://localhost:48216
 
 ## Upgrading
 
+For a pinned release:
+
 ```bash
-docker compose pull && docker compose up -d
+docker compose pull
+docker compose up -d
 ```
+
+Your configuration and persistent data remain in the `data/` directory.
 
 ## Configuration
 
-All configuration is done through the web UI:
+DashHub is configured through the web interface:
 
-1. Click **Edit Mode** (pencil icon)
-2. Add widgets from the palette
-3. Configure each widget via its settings
-4. Configuration auto-saves to `data/conf.yml`
+1. Enable Edit Mode
+2. Add widgets from the widget palette
+3. Configure each widget
+4. Arrange widgets using drag & drop
+5. Configuration is automatically persisted to `data/conf.yml`
 
-## Tech Stack
+## Widget Categories
+
+| Category | Widgets |
+|----------|---------|
+| Infrastructure | SSH, Glances, System Info, Process List, Service Status, System Logs, Database Monitor |
+| Monitoring | Uptime, Status Indicators, Glances |
+| Productivity | Calendar, Notes, Reminders, Clock |
+| Network | Public IP, Speedtest, Weather |
+| Information | RSS, YouTube, Quick Links, IFrame |
+| Utilities | Latest Versions |
+
+## Technology
 
 | Component | Technology |
 |-----------|------------|
-| Frontend | Vue.js 3 (Composition API) |
+| Frontend | Vue.js 3 |
 | Build | Vite |
 | State | Pinia |
 | Terminal | xterm.js |
-| SSH Bridge | Node.js + ssh2 + ws |
+| SSH | Node.js + ssh2 + WebSocket |
 | Calendar | CalDAV + ical.js |
+| API | Express |
+| Web Server | nginx |
 | Container | Docker + Docker Compose |
-| Web Server | nginx + Express |
 
 ## Docker Images
 
+Images are published through GitHub Container Registry:
+
 | Tag | Description |
 |-----|-------------|
-| `latest` | Latest stable release |
 | `1.0.17` | Current release |
+| `latest` | Latest stable release |
 | `dev` | Development build |
 
-Available on [GitHub Container Registry](https://github.com/devosduotech/dashhub/pkgs/container/dashhub):
+Pull the current release:
 
 ```bash
-docker pull ghcr.io/devosduotech/dashhub:latest
+docker pull ghcr.io/devosduotech/dashhub:1.0.17
 ```
+
+View [Docker Images on GitHub](https://github.com/devosduotech/dashhub/pkgs/container/dashhub)
 
 ## Project Structure
 
@@ -124,7 +199,7 @@ dashhub/
 │   └── default.yml         # Default configuration
 ├── scripts/
 │   └── install-glances.sh  # Glances agent installer
-└── docker-compose.yml      # Production compose
+└── docker-compose.yml      # Production Compose configuration
 ```
 
 ## License
