@@ -51,7 +51,7 @@ function getItems(): VersionItem[] {
 async function refresh() {
   loading.value = true
   try {
-    items.value = await fetchLatestVersions(getItems())
+    items.value = await fetchLatestVersions(getItems(), true)
   } catch {
     items.value = getItems().map(i => ({ ...i, error: 'Fetch failed' }))
   } finally {

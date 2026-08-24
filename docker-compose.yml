@@ -62,6 +62,8 @@ services:
       - TZ=${TZ:-UTC}
       # Config directory path (matches volume mount)
       - CONFIG_DIR=/app/data
+      # Optional: GitHub token for higher API rate limits
+      - GITHUB_TOKEN=${GITHUB_TOKEN:-}
 
     # Health check (checks the API, so "healthy" means the full stack is up)
     healthcheck:
