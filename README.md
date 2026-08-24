@@ -175,7 +175,7 @@ Images are published through GitHub Container Registry:
 
 | Tag | Description |
 |-----|-------------|
-| `1.0.17` | Current release |
+| `1.0.18` | Current release |
 | `latest` | Latest stable release |
 | `dev` | Development build |
 

@@ -4,15 +4,19 @@ function authHeader(username, password) {
   return 'Basic ' + Buffer.from(`${username}:${password}`).toString('base64')
 }
 
+function stripCData(text) {
+  return String(text).replace(/<!\[CDATA\[([\s\S]*?)\]\]>/g, '$1')
+}
+
 function parseICSEvents(icsText) {
   const events = []
   try {
-    const jCal = ICAL.parse(icsText)
+    const cleaned = stripCData(icsText)
+    const jCal = ICAL.parse(cleaned)
     const comp = new ICAL.Component(jCal)
     const vevents = comp.getAllSubcomponents('vevent')
     for (const vevent of vevents) {
       const event = new ICAL.Event(vevent)
-      if (event.isRecurrence()) continue
       events.push({
         uid: event.uid,
         summary: event.summary || '(No title)',
@@ -25,7 +29,7 @@ function parseICSEvents(icsText) {
       })
     }
   } catch (e) {
-    // Ignore parse errors for individual events
+    console.warn('[caldav] ICS parse error:', e.message)
   }
   return events
 }
@@ -85,7 +89,6 @@ export async function discoverCalendars(baseUrl, username, password) {
   const xml = await res.text()
   const calendars = []
 
-  // Step 1: Check if response has calendar resources directly
   const blocks = findAllResponseBlocks(xml)
   for (const block of blocks) {
     if (hasCalendarResource(block)) {
@@ -99,7 +102,6 @@ export async function discoverCalendars(baseUrl, username, password) {
 
   if (calendars.length > 0) return calendars
 
-  // Step 2: Look for calendar-home-set (Nextcloud pattern)
   const homeSetRaw = extractTag(xml, 'calendar-home-set')
   if (homeSetRaw) {
     const hrefMatch = homeSetRaw.match(/<[^>:]*:href[^>]*>([\s\S]*?)<\/[^>:]*:href>/i)
@@ -128,7 +130,6 @@ export async function discoverCalendars(baseUrl, username, password) {
 
   if (calendars.length > 0) return calendars
 
-  // Step 3: Try Nextcloud direct calendars path
   if (url.includes('/remote.php/dav')) {
     const calUrl = url.replace(/\/$/, '') + '/calendars/' + username + '/'
     const calRes = await fetch(calUrl, { method: 'PROPFIND', headers, body: propfindBody })
@@ -166,7 +167,6 @@ export async function fetchEvents(baseUrl, username, password, calendarUrl, star
     'Content-Type': 'application/xml; charset=utf-8'
   }
 
-  // Validate calendar URL with PROPFIND first
   try {
     const probe = await fetch(calFullUrl, {
       method: 'PROPFIND',
@@ -191,6 +191,8 @@ export async function fetchEvents(baseUrl, username, password, calendarUrl, star
   const startStr = start.toISOString().replace(/[-:]/g, '').split('.')[0] + 'Z'
   const endStr = end.toISOString().replace(/[-:]/g, '').split('.')[0] + 'Z'
 
+  console.log(`[caldav] fetching events from ${calFullUrl} (${startStr} to ${endStr})`)
+
   const body = `<?xml version="1.0" encoding="utf-8" ?>
 <C:calendar-query xmlns:D="DAV:" xmlns:C="urn:ietf:params:xml:ns:caldav">
   <D:prop>
@@ -208,8 +210,8 @@ export async function fetchEvents(baseUrl, username, password, calendarUrl, star
 
   const res = await fetch(calFullUrl, { method: 'REPORT', headers, body })
   if (!res.ok && res.status !== 207) {
-    const body = await res.text().catch(() => '')
-    throw new Error(`Fetch events failed: HTTP ${res.status} from ${calFullUrl}${body ? ' — ' + body.slice(0, 200) : ''}`)
+    const respBody = await res.text().catch(() => '')
+    throw new Error(`Fetch events failed: HTTP ${res.status} from ${calFullUrl}${respBody ? ' — ' + respBody.slice(0, 200) : ''}`)
   }
 
   const xml = await res.text()
@@ -217,13 +219,15 @@ export async function fetchEvents(baseUrl, username, password, calendarUrl, star
   const dataRegex = /<[^>:]*:calendar-data>([\s\S]*?)<\/[^>:]*:calendar-data>/gi
   let match
   while ((match = dataRegex.exec(xml)) !== null) {
-    const icsData = match[1]
+    const icsData = stripCData(match[1])
       .replace(/&lt;/g, '<')
       .replace(/&gt;/g, '>')
       .replace(/&amp;/g, '&')
     const parsed = parseICSEvents(icsData)
     events.push(...parsed)
   }
+
+  console.log(`[caldav] found ${events.length} events`)
 
   events.sort((a, b) => {
     if (!a.start) return 1
@@ -232,4 +236,90 @@ export async function fetchEvents(baseUrl, username, password, calendarUrl, star
   })
 
   return events
+}
+
+function generateUID() {
+  return 'dashhub-' + Date.now().toString(36) + '-' + Math.random().toString(36).slice(2, 10)
+}
+
+function formatCalDAVDate(date) {
+  const d = new Date(date)
+  return d.toISOString().replace(/[-:]/g, '').split('.')[0] + 'Z'
+}
+
+export async function createEvent(baseUrl, username, password, calendarUrl, event) {
+  let calFullUrl
+  if (calendarUrl.startsWith('http')) {
+    calFullUrl = calendarUrl
+  } else {
+    const base = new URL(baseUrl)
+    calFullUrl = base.origin + calendarUrl
+  }
+  if (!calFullUrl.endsWith('/')) calFullUrl += '/'
+
+  const uid = generateUID()
+  const now = formatCalDAVDate(new Date())
+  const startStr = formatCalDAVDate(event.start)
+  const endStr = formatCalDAVDate(event.end)
+
+  const description = (event.description || '').replace(/\r?\n/g, '\\n')
+  const summary = (event.summary || '(No title)').replace(/\r?\n/g, '\\n')
+  const location = (event.location || '').replace(/\r?\n/g, '\\n')
+
+  let ics = `BEGIN:VCALENDAR
+VERSION:2.0
+PRODID:-//DashHub//CalDAV//EN
+BEGIN:VEVENT
+UID:${uid}
+DTSTAMP:${now}
+DTSTART:${startStr}
+DTEND:${endStr}
+SUMMARY:${summary}`
+  if (location) ics += `\nLOCATION:${location}`
+  if (description) ics += `\nDESCRIPTION:${description}`
+  ics += `\nEND:VEVENT\nEND:VCALENDAR`
+
+  const eventUrl = calFullUrl + uid + '.ics'
+
+  const headers = {
+    'Authorization': authHeader(username, password),
+    'Content-Type': 'text/calendar; charset=utf-8'
+  }
+
+  console.log(`[caldav] creating event at ${eventUrl}`)
+
+  const res = await fetch(eventUrl, { method: 'PUT', headers, body: ics })
+  if (!res.ok && res.status !== 201 && res.status !== 204) {
+    const respBody = await res.text().catch(() => '')
+    throw new Error(`Create event failed: HTTP ${res.status}${respBody ? ' — ' + respBody.slice(0, 200) : ''}`)
+  }
+
+  return { uid }
+}
+
+export async function deleteEvent(baseUrl, username, password, calendarUrl, eventUid) {
+  let calFullUrl
+  if (calendarUrl.startsWith('http')) {
+    calFullUrl = calendarUrl
+  } else {
+    const base = new URL(baseUrl)
+    calFullUrl = base.origin + calendarUrl
+  }
+  if (!calFullUrl.endsWith('/')) calFullUrl += '/'
+
+  const eventUrl = calFullUrl + eventUid + '.ics'
+
+  const headers = {
+    'Authorization': authHeader(username, password)
+  }
+
+  console.log(`[caldav] deleting event at ${eventUrl}`)
+
+  const res = await fetch(eventUrl, { method: 'DELETE', headers })
+  if (!res.ok && res.status !== 204 && res.status !== 404) {
+    const respBody = await res.text().catch(() => '')
+    throw new Error(`Delete event failed: HTTP ${res.status}${respBody ? ' — ' + respBody.slice(0, 200) : ''}`)
+  }
+
+  return { ok: true }
 }

@@ -18,7 +18,7 @@ import { UPLOADS_DIR, listUploads, saveUpload, deleteUpload, MAX_UPLOAD_SIZE } f
 import { getChannelVideos, isValidChannelId } from './youtube.js'
 import { getFeedItems, isValidFeedUrl } from './rss.js'
 import { getHistory as getUptimeHistory, appendResults as appendUptimeResults } from './uptimeStore.js'
-import { discoverCalendars, fetchEvents } from './caldavClient.js'
+import { discoverCalendars, fetchEvents, createEvent, deleteEvent } from './caldavClient.js'
 import { fetchProcesses } from './processClient.js'
 import { fetchSystemInfo } from './systemInfoClient.js'
 import { fetchServiceStatus } from './serviceStatusClient.js'
@@ -310,6 +310,38 @@ app.post('/api/caldav/events', express.json({ limit: '1mb' }), async (req, res) 
     res.json({ events })
   } catch (err) {
     sendError(res, 502, 'CALDAV_EVENTS_FAILED', err instanceof Error ? err.message : 'Failed to fetch events')
+  }
+})
+
+app.post('/api/caldav/create-event', express.json({ limit: '1mb' }), async (req, res) => {
+  try {
+    const { baseUrl, username, password, calendarUrl, summary, description, location, start, end } = req.body
+    if (!baseUrl || !username || !password || !calendarUrl || !start || !end) {
+      return sendError(res, 400, 'MISSING_FIELDS', 'baseUrl, username, password, calendarUrl, start, and end are required')
+    }
+    const result = await createEvent(baseUrl, username, password, calendarUrl, {
+      summary: summary || '',
+      description: description || '',
+      location: location || '',
+      start: new Date(start),
+      end: new Date(end)
+    })
+    res.json(result)
+  } catch (err) {
+    sendError(res, 502, 'CALDAV_CREATE_FAILED', err instanceof Error ? err.message : 'Failed to create event')
+  }
+})
+
+app.post('/api/caldav/delete-event', express.json({ limit: '1mb' }), async (req, res) => {
+  try {
+    const { baseUrl, username, password, calendarUrl, eventUid } = req.body
+    if (!baseUrl || !username || !password || !calendarUrl || !eventUid) {
+      return sendError(res, 400, 'MISSING_FIELDS', 'baseUrl, username, password, calendarUrl, and eventUid are required')
+    }
+    const result = await deleteEvent(baseUrl, username, password, calendarUrl, eventUid)
+    res.json(result)
+  } catch (err) {
+    sendError(res, 502, 'CALDAV_DELETE_FAILED', err instanceof Error ? err.message : 'Failed to delete event')
   }
 })
 

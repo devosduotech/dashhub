@@ -52,6 +52,51 @@ export async function fetchEvents(
   return data.events
 }
 
+export async function createEvent(
+  baseUrl: string,
+  username: string,
+  password: string,
+  calendarUrl: string,
+  event: { summary: string; description: string; location: string; start: Date; end: Date }
+): Promise<{ uid: string }> {
+  const res = await fetch('/api/caldav/create-event', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      baseUrl, username, password, calendarUrl,
+      summary: event.summary,
+      description: event.description,
+      location: event.location,
+      start: event.start.toISOString(),
+      end: event.end.toISOString()
+    })
+  })
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({}))
+    throw new Error(err.message || `Create failed: HTTP ${res.status}`)
+  }
+  return res.json()
+}
+
+export async function deleteEvent(
+  baseUrl: string,
+  username: string,
+  password: string,
+  calendarUrl: string,
+  eventUid: string
+): Promise<{ ok: boolean }> {
+  const res = await fetch('/api/caldav/delete-event', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ baseUrl, username, password, calendarUrl, eventUid })
+  })
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({}))
+    throw new Error(err.message || `Delete failed: HTTP ${res.status}`)
+  }
+  return res.json()
+}
+
 export function formatEventDate(isoStr: string, allDay: boolean): string {
   const d = new Date(isoStr)
   if (allDay) {
