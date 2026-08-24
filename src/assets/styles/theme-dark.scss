@@ -1,5 +1,9 @@
 @use 'variables' as v;
 
+html {
+  font-size: 14px;
+}
+
 body {
   margin: 0;
   background-color: var(--color-bg, #0f1729);
