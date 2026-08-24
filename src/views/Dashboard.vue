@@ -154,7 +154,9 @@ watch(() => store.activePageIndex, (newIndex) => {
 <style scoped lang="scss">
 .dashboard {
   padding: 1.5rem;
-  min-height: calc(100vh - 5.5rem);
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
 }
 
 .widget-grid {
