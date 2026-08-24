@@ -51,13 +51,14 @@ Instead of replacing your existing tools, DashHub brings them together:
 - **Service Status** — Monitor systemd services through SSH
 - **System Logs** — View journalctl logs through SSH
 - **Database Monitor** — Monitor MySQL/MariaDB databases through SSH
+- **Docker Compose Monitor** — Service status with inline start/stop/restart controls
 - **Server Monitoring** — Real-time CPU, memory, disk, and network metrics using Glances
 - **Server Uptime** — Monitor endpoint availability with history
 - **Status Indicators** — Endpoint health and latency indicators
 
 ### Productivity
 
-- **Calendar** — Month view and upcoming events from Nextcloud/CalDAV
+- **Calendar** — Month view and upcoming events from Nextcloud/CalDAV with event creation/deletion
 - **Notes** — Personal notes with priority
 - **Reminders** — Task reminders with completion tracking
 - **Clock** — Live time and date display
@@ -88,7 +89,7 @@ DashHub is designed to run on your own infrastructure.
 - GitHub Container Registry
 - Suitable for personal and trusted private-LAN environments
 
-> **Deployment boundary:** DashHub v1.x is currently designed for local and trusted private-LAN use. Public Internet and shared multi-user deployment require additional security hardening planned for a future phase.
+> **Deployment boundary:** DashHub v1.x is designed for local and trusted private-LAN use. Public Internet and shared multi-user deployment require additional security hardening planned for Phase 2.
 
 ## Quick Start
 
@@ -97,7 +98,7 @@ DashHub is designed to run on your own infrastructure.
 ```bash
 mkdir dashhub && cd dashhub
 mkdir data
-curl -O https://raw.githubusercontent.com/devosduotech/dashhub/v1.0.17/docker-compose.yml
+curl -O https://raw.githubusercontent.com/devosduotech/dashhub/v1.0.18/docker-compose.yml
 docker compose up -d
 ```
 
@@ -111,7 +112,7 @@ docker run -d \
   -p 48215:80 \
   -v "$PWD/data":/app/data \
   --restart unless-stopped \
-  ghcr.io/devosduotech/dashhub:1.0.17
+  ghcr.io/devosduotech/dashhub:1.0.18
 ```
 
 ### Build from Source
@@ -150,12 +151,11 @@ DashHub is configured through the web interface:
 
 | Category | Widgets |
 |----------|---------|
-| Infrastructure | SSH, Glances, System Info, Process List, Service Status, System Logs, Database Monitor |
+| Infrastructure | SSH, Glances, System Info, Process List, Service Status, System Logs, Database Monitor, Docker Compose |
 | Monitoring | Uptime, Status Indicators, Glances |
 | Productivity | Calendar, Notes, Reminders, Clock |
-| Network | Public IP, Speedtest, Weather |
+| Network | Public IP, Speedtest, Weather, Latest Versions |
 | Information | RSS, YouTube, Quick Links, IFrame |
-| Utilities | Latest Versions |
 
 ## Technology
 
@@ -184,7 +184,7 @@ Images are published through GitHub Container Registry:
 Pull the current release:
 
 ```bash
-docker pull ghcr.io/devosduotech/dashhub:1.0.17
+docker pull ghcr.io/devosduotech/dashhub:1.0.18
 ```
 
 View [Docker Images on GitHub](https://github.com/devosduotech/dashhub/pkgs/container/dashhub)
