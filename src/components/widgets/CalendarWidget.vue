@@ -97,12 +97,19 @@ function selectDay(date: Date) {
   }
 }
 
+function toLocalDateStr(d: Date): string {
+  const year = d.getFullYear()
+  const month = String(d.getMonth() + 1).padStart(2, '0')
+  const day = String(d.getDate()).padStart(2, '0')
+  return `${year}-${month}-${day}`
+}
+
 function openAddForm() {
   if (!selectedDay.value) return
   resetForm()
   const d = selectedDay.value
-  formStartDate.value = d.toISOString().split('T')[0]
-  formEndDate.value = d.toISOString().split('T')[0]
+  formStartDate.value = toLocalDateStr(d)
+  formEndDate.value = toLocalDateStr(d)
   formStartTime.value = '09:00'
   formEndTime.value = '10:00'
   showAddForm.value = true
@@ -325,10 +332,6 @@ onUnmounted(() => {
         </div>
       </div>
     </template>
-
-    <button v-if="cfg.serverUrl" class="refresh-btn" :disabled="loading" @click="loadEvents">
-      <AppIcon name="refresh" :size="14" />
-    </button>
   </div>
 </template>
 
@@ -565,24 +568,6 @@ onUnmounted(() => {
   color: var(--color-text-muted);
   cursor: pointer;
   margin-left: auto;
-  &:hover:not(:disabled) { background-color: var(--color-bg-hover); color: var(--color-text); }
-  &:disabled { opacity: 0.5; cursor: not-allowed; }
-}
-
-.refresh-btn {
-  position: absolute;
-  top: 0.75rem;
-  right: 0.75rem;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 1.75rem;
-  height: 1.75rem;
-  border: none;
-  background: none;
-  border-radius: 4px;
-  color: var(--color-text-muted);
-  cursor: pointer;
   &:hover:not(:disabled) { background-color: var(--color-bg-hover); color: var(--color-text); }
   &:disabled { opacity: 0.5; cursor: not-allowed; }
 }
