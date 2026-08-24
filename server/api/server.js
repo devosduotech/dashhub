@@ -24,6 +24,7 @@ import { fetchSystemInfo } from './systemInfoClient.js'
 import { fetchServiceStatus } from './serviceStatusClient.js'
 import { fetchSystemLogs } from './systemLogsClient.js'
 import { fetchDatabaseMonitor } from './databaseMonitorClient.js'
+import { fetchGitHubRelease } from './githubClient.js'
 
 const app = express()
 const PORT = process.env.API_PORT || 48231
@@ -428,6 +429,22 @@ app.post('/api/database-monitor', express.json({ limit: '1mb' }), async (req, re
     res.json(result)
   } catch (err) {
     sendError(res, 500, 'DATABASE_MONITOR_FAILED', err instanceof Error ? err.message : 'Failed to fetch database stats')
+  }
+})
+
+// --- GitHub releases proxy endpoint ---
+
+app.get('/api/github/releases', async (req, res) => {
+  try {
+    const repo = String(req.query.repo || '')
+    if (!repo || !repo.includes('/')) {
+      return sendError(res, 400, 'MISSING_REPO', 'repo parameter is required (owner/name)')
+    }
+    const result = await fetchGitHubRelease(repo)
+    res.json(result)
+  } catch (err) {
+    const status = err.code === 'GITHUB_RATE_LIMIT' ? 429 : 502
+    sendError(res, status, err.code || 'GITHUB_FETCH', err.message || 'Failed to fetch GitHub release')
   }
 })
 
