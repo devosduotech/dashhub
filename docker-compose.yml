@@ -27,7 +27,7 @@ services:
   #   - SSH Bridge: Native ssh2 library (no GoTTY required)
   #============================================================
   dashhub:
-    image: ghcr.io/devosduotech/dashhub:1.0.17
+    image: ghcr.io/devosduotech/dashhub:1.0.18
     container_name: dashhub
     restart: unless-stopped
 
