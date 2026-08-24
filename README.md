@@ -35,9 +35,11 @@ Instead of replacing your existing tools, DashHub brings them together:
 
 ### Dashboard
 
-- **Multi-Page Dashboards** — Create, rename, reorder, and delete dashboard pages
+- **Custom Dashboard Pages** — Create, rename, reorder, and delete pages
+- **Configurable Page Layouts** — Choose the number of columns for each page
+- **Custom Widget Placement** — Decide which widgets appear on each page and arrange them across columns
+- **Drag & Drop Layout** — Move widgets within and between columns or pages
 - **Customizable Layouts** — Arrange widgets across multiple columns
-- **Drag & Drop** — Move widgets within and between columns
 - **Edit Mode** — Configure dashboards directly from the UI
 - **Themes & Branding** — Theme-aware interface with reusable icons and branding
 
