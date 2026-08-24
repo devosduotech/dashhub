@@ -88,10 +88,13 @@ function sshConfigWith(port, connId = 'conn-host') {
 // --- Real SSH host used to exercise the bridge's host-key verification -----
 
 function generateHostKey() {
-  const kp = utils.generateKeyPairSync('ed25519')
-  const key = kp.private
-  if (typeof key === 'string') return key
-  return key.export({ type: 'openssh', format: 'pem' })
+  const { execSync } = require('child_process')
+  const fs = require('fs')
+  const tmp = fs.mkdtempSync(require('os').tmpdir() + '/ssh-hostkey-')
+  execSync(`ssh-keygen -t ed25519 -f ${tmp}/key -N '' -q`)
+  const key = fs.readFileSync(`${tmp}/key`, 'utf8')
+  fs.rmSync(tmp, { recursive: true })
+  return key
 }
 
 function startSshHost(port = 0) {
