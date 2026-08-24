@@ -310,6 +310,20 @@ function validateConfig(config) {
   return { valid: errors.length === 0, errors }
 }
 
+/**
+ * Read full config from disk and return the config for a specific widget by id.
+ * Returns the unsanitized config (with secrets) so server-side CalDAV calls work.
+ */
+function getWidgetConfig(widgetId) {
+  const config = readConfigSync()
+  for (const page of config.pages || []) {
+    for (const item of page.items || []) {
+      if (item.id === widgetId) return item.config || {}
+    }
+  }
+  return null
+}
+
 export {
   CONFIG_DIR,
   CONFIG_FILE,
@@ -319,5 +333,6 @@ export {
   ensureIds,
   sanitizeConfig,
   preserveCredentials,
+  getWidgetConfig,
   LIMITS
 }

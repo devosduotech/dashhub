@@ -116,6 +116,7 @@ const otherPages = computed(() => {
         v-if="WidgetComponent"
         :is="WidgetComponent"
         :config="draftConfig"
+        :item-id="item.id"
         :edit-mode="store.editMode"
         @update="updateDraftConfig"
       />

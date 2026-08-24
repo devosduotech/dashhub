@@ -11,6 +11,7 @@ import {
   ensureIds,
   sanitizeConfig,
   preserveCredentials,
+  getWidgetConfig,
   CONFIG_FILE
 } from './configManager.js'
 import { setupSshBridge } from './sshBridge.js'
@@ -285,9 +286,31 @@ app.get('/api/processes', async (req, res) => {
 
 // --- CalDAV calendar endpoints ---
 
+function resolveCalDavCredentials(body) {
+  let { baseUrl, username, password, calendarUrl } = body
+  if (body.widgetId && (!baseUrl || !username || !password || !calendarUrl)) {
+    const wc = getWidgetConfig(body.widgetId)
+    if (wc) {
+      baseUrl = baseUrl || wc.serverUrl
+      username = username || wc.username
+      password = password || wc.password
+      calendarUrl = calendarUrl || wc.calendarUrl
+    }
+  }
+  return { baseUrl, username, password, calendarUrl }
+}
+
 app.post('/api/caldav/discover', express.json({ limit: '1mb' }), async (req, res) => {
   try {
-    const { baseUrl, username, password } = req.body
+    let { baseUrl, username, password } = req.body
+    if (req.body.widgetId && (!baseUrl || !username || !password)) {
+      const wc = getWidgetConfig(req.body.widgetId)
+      if (wc) {
+        baseUrl = baseUrl || wc.serverUrl
+        username = username || wc.username
+        password = password || wc.password
+      }
+    }
     if (!baseUrl || !username || !password) {
       return sendError(res, 400, 'MISSING_FIELDS', 'baseUrl, username, and password are required')
     }
@@ -300,7 +323,9 @@ app.post('/api/caldav/discover', express.json({ limit: '1mb' }), async (req, res
 
 app.post('/api/caldav/events', express.json({ limit: '1mb' }), async (req, res) => {
   try {
-    const { baseUrl, username, password, calendarUrl, start, end } = req.body
+    const creds = resolveCalDavCredentials(req.body)
+    const { baseUrl, username, password, calendarUrl } = creds
+    const { start, end } = req.body
     if (!baseUrl || !username || !password || !calendarUrl) {
       return sendError(res, 400, 'MISSING_FIELDS', 'baseUrl, username, password, and calendarUrl are required')
     }
@@ -315,9 +340,10 @@ app.post('/api/caldav/events', express.json({ limit: '1mb' }), async (req, res) 
 
 app.post('/api/caldav/create-event', express.json({ limit: '1mb' }), async (req, res) => {
   try {
-    const { baseUrl, username, password, calendarUrl, summary, description, location, start, end } = req.body
-    console.log('[caldav] create-event body keys:', Object.keys(req.body || {}))
-    console.log('[caldav] create-event values:', { baseUrl: !!baseUrl, username: !!username, password: !!password, calendarUrl: !!calendarUrl, start: !!start, end: !!end })
+    const creds = resolveCalDavCredentials(req.body)
+    const { baseUrl, username, password, calendarUrl } = creds
+    const { summary, description, location, start, end } = req.body
+    console.log('[caldav] create-event resolved:', { hasBaseUrl: !!baseUrl, hasUser: !!username, hasPass: !!password, hasCal: !!calendarUrl, hasStart: !!start, hasEnd: !!end })
     if (!baseUrl || !username || !password || !calendarUrl || !start || !end) {
       return sendError(res, 400, 'MISSING_FIELDS', 'baseUrl, username, password, calendarUrl, start, and end are required')
     }
@@ -336,7 +362,9 @@ app.post('/api/caldav/create-event', express.json({ limit: '1mb' }), async (req,
 
 app.post('/api/caldav/delete-event', express.json({ limit: '1mb' }), async (req, res) => {
   try {
-    const { baseUrl, username, password, calendarUrl, eventUid } = req.body
+    const creds = resolveCalDavCredentials(req.body)
+    const { baseUrl, username, password, calendarUrl } = creds
+    const { eventUid } = req.body
     if (!baseUrl || !username || !password || !calendarUrl || !eventUid) {
       return sendError(res, 400, 'MISSING_FIELDS', 'baseUrl, username, password, calendarUrl, and eventUid are required')
     }

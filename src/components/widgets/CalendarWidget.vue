@@ -9,6 +9,7 @@ import AppIcon from '@/components/ui/AppIcon.vue'
 
 const props = defineProps<{
   config: Record<string, unknown>
+  itemId?: string
 }>()
 
 const cfg = computed(() => props.config as CalendarWidgetConfig)
@@ -131,7 +132,7 @@ async function submitEvent() {
     formError.value = 'Title, date, and time are required'
     return
   }
-  if (!cfg.value.serverUrl || !cfg.value.username || !cfg.value.password || !cfg.value.calendarUrl) {
+  if (!cfg.value.serverUrl || !cfg.value.calendarUrl) {
     formError.value = 'CalDAV not configured. Open widget settings first.'
     return
   }
@@ -159,7 +160,7 @@ async function submitEvent() {
     await createEvent(
       cfg.value.serverUrl,
       cfg.value.username,
-      cfg.value.password,
+      cfg.value.password || '',
       cfg.value.calendarUrl,
       {
         summary: formSummary.value.trim(),
@@ -167,7 +168,8 @@ async function submitEvent() {
         location: formLocation.value.trim(),
         start,
         end
-      }
+      },
+      props.itemId
     )
     showAddForm.value = false
     resetForm()
@@ -185,9 +187,10 @@ async function handleDeleteEvent(uid: string) {
     await deleteEvent(
       cfg.value.serverUrl,
       cfg.value.username,
-      cfg.value.password,
+      cfg.value.password || '',
       cfg.value.calendarUrl,
-      uid
+      uid,
+      props.itemId
     )
     await loadEvents()
   } catch (err) {
@@ -207,10 +210,11 @@ async function loadEvents() {
     events.value = await fetchEvents(
       cfg.value.serverUrl,
       cfg.value.username,
-      cfg.value.password,
+      cfg.value.password || '',
       cfg.value.calendarUrl,
       start,
-      end
+      end,
+      props.itemId
     )
   } catch (err) {
     error.value = err instanceof Error ? err.message : 'Failed to load events'

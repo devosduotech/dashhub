@@ -16,12 +16,13 @@ export interface CalDAVEvent {
 export async function discoverCalendars(
   baseUrl: string,
   username: string,
-  password: string
+  password: string,
+  widgetId?: string
 ): Promise<CalDAVCalendar[]> {
   const res = await fetch('/api/caldav/discover', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ baseUrl, username, password })
+    body: JSON.stringify({ baseUrl, username, password, widgetId })
   })
   if (!res.ok) {
     const err = await res.json().catch(() => ({}))
@@ -37,12 +38,13 @@ export async function fetchEvents(
   password: string,
   calendarUrl: string,
   start: Date,
-  end: Date
+  end: Date,
+  widgetId?: string
 ): Promise<CalDAVEvent[]> {
   const res = await fetch('/api/caldav/events', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ baseUrl, username, password, calendarUrl, start: start.toISOString(), end: end.toISOString() })
+    body: JSON.stringify({ baseUrl, username, password, calendarUrl, start: start.toISOString(), end: end.toISOString(), widgetId })
   })
   if (!res.ok) {
     const err = await res.json().catch(() => ({}))
@@ -57,13 +59,14 @@ export async function createEvent(
   username: string,
   password: string,
   calendarUrl: string,
-  event: { summary: string; description: string; location: string; start: Date; end: Date }
+  event: { summary: string; description: string; location: string; start: Date; end: Date },
+  widgetId?: string
 ): Promise<{ uid: string }> {
   const res = await fetch('/api/caldav/create-event', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({
-      baseUrl, username, password, calendarUrl,
+      baseUrl, username, password, calendarUrl, widgetId,
       summary: event.summary,
       description: event.description,
       location: event.location,
@@ -83,12 +86,13 @@ export async function deleteEvent(
   username: string,
   password: string,
   calendarUrl: string,
-  eventUid: string
+  eventUid: string,
+  widgetId?: string
 ): Promise<{ ok: boolean }> {
   const res = await fetch('/api/caldav/delete-event', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ baseUrl, username, password, calendarUrl, eventUid })
+    body: JSON.stringify({ baseUrl, username, password, calendarUrl, eventUid, widgetId })
   })
   if (!res.ok) {
     const err = await res.json().catch(() => ({}))
