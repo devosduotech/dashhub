@@ -316,6 +316,8 @@ app.post('/api/caldav/events', express.json({ limit: '1mb' }), async (req, res) 
 app.post('/api/caldav/create-event', express.json({ limit: '1mb' }), async (req, res) => {
   try {
     const { baseUrl, username, password, calendarUrl, summary, description, location, start, end } = req.body
+    console.log('[caldav] create-event body keys:', Object.keys(req.body || {}))
+    console.log('[caldav] create-event values:', { baseUrl: !!baseUrl, username: !!username, password: !!password, calendarUrl: !!calendarUrl, start: !!start, end: !!end })
     if (!baseUrl || !username || !password || !calendarUrl || !start || !end) {
       return sendError(res, 400, 'MISSING_FIELDS', 'baseUrl, username, password, calendarUrl, start, and end are required')
     }

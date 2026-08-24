@@ -131,6 +131,10 @@ async function submitEvent() {
     formError.value = 'Title, date, and time are required'
     return
   }
+  if (!cfg.value.serverUrl || !cfg.value.username || !cfg.value.password || !cfg.value.calendarUrl) {
+    formError.value = 'CalDAV not configured. Open widget settings first.'
+    return
+  }
   adding.value = true
   formError.value = null
   try {
@@ -144,6 +148,14 @@ async function submitEvent() {
       formError.value = 'End time must be after start time'
       return
     }
+    console.log('[calendar] creating event:', {
+      baseUrl: cfg.value.serverUrl,
+      username: cfg.value.username,
+      calendarUrl: cfg.value.calendarUrl,
+      summary: formSummary.value.trim(),
+      start: start.toISOString(),
+      end: end.toISOString()
+    })
     await createEvent(
       cfg.value.serverUrl,
       cfg.value.username,
