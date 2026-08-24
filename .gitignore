@@ -50,3 +50,6 @@ temp/
 
 # Old structure (migration)
 user-data/
+data-dev
+Planned_Design*
+config/demo.yml
