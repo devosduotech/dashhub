@@ -205,8 +205,14 @@ async function loadEvents() {
   loading.value = true
   error.value = null
   try {
-    const start = new Date(viewYear.value, viewMonth.value, 1)
-    const end = new Date(viewYear.value, viewMonth.value + 1, 0, 23, 59, 59)
+    let start: Date, end: Date
+    if (cfg.value.displayMode === 'upcoming') {
+      start = new Date()
+      end = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000)
+    } else {
+      start = new Date(viewYear.value, viewMonth.value, 1)
+      end = new Date(viewYear.value, viewMonth.value + 1, 0, 23, 59, 59)
+    }
     events.value = await fetchEvents(
       cfg.value.serverUrl,
       cfg.value.username,
