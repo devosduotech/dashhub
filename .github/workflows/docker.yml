@@ -107,6 +107,13 @@ jobs:
             --tmpfs /tmp:noexec,nosuid,size=64m \
             --tmpfs /var/cache/nginx:noexec,nosuid,size=64m \
             --tmpfs /var/run:noexec,nosuid,size=4m \
+            --cap-drop ALL \
+            --cap-add NET_BIND_SERVICE \
+            --cap-add CHOWN \
+            --cap-add DAC_OVERRIDE \
+            --cap-add FOWNER \
+            --cap-add SETGID \
+            --cap-add SETUID \
             -p 8080:80 \
             -v "$SMOKE_DIR":/app/data \
             ghcr.io/${{ github.repository }}:smoke

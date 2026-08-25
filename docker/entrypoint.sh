@@ -6,15 +6,22 @@ set -e
 
 echo "Starting OSDuo DashHub..."
 
-# Ensure data directory exists and is writable by the unprivileged runtime user
-mkdir -p /app/data
-chown -R dashhub:dashhub /app/data
+# Ensure data directory exists and is writable by the unprivileged runtime
+# user. chown can fail legitimately (CAP_CHOWN dropped, read-only mount);
+# never let that kill the container.
+mkdir -p /app/data 2>/dev/null || true
+if ! chown -R dashhub:dashhub /app/data 2>/dev/null; then
+    echo "[entrypoint] WARNING: could not chown /app/data (restricted capabilities or read-only volume)."
+    echo "[entrypoint] Assuming existing ownership is correct. If the app hits permission"
+    echo "[entrypoint] errors, fix ownership on the host, e.g.:"
+    echo "[entrypoint]   sudo chown -R $(id -u dashhub):$(id -g dashhub) <host-data-dir>"
+fi
 
 # Initialize configuration if not present
-if [ ! -f /app/data/conf.yml ]; then
+if [ ! -f /app/data/conf.yml ] && [ -w /app/data ]; then
     echo "No configuration found. Copying default configuration..."
     cp /app/config/default.yml /app/data/conf.yml
-    chown dashhub:dashhub /app/data/conf.yml
+    chown dashhub:dashhub /app/data/conf.yml 2>/dev/null || true
     echo "Configuration initialized at /app/data/conf.yml"
     echo "Please customize and restart the container."
 fi

@@ -40,8 +40,16 @@ services:
       - no-new-privileges:true
     cap_drop:
       - ALL
+    # Bootstrap caps only: root needs these to prepare the bind-mounted data
+    # dir, then su-exec drops irreversibly to the unprivileged dashhub user.
+    # nginx master keeps NET_BIND_SERVICE for port 80.
     cap_add:
       - NET_BIND_SERVICE
+      - CHOWN
+      - DAC_OVERRIDE
+      - FOWNER
+      - SETGID
+      - SETUID
 
     # Read-only root filesystem with tmpfs for writable paths
     read_only: true
