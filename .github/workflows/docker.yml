@@ -103,6 +103,10 @@ jobs:
           set -euo pipefail
           SMOKE_DIR=$(mktemp -d)
           docker run -d --name dashhub-smoke --rm \
+            --read-only \
+            --tmpfs /tmp:noexec,nosuid,size=64m \
+            --tmpfs /var/cache/nginx:noexec,nosuid,size=64m \
+            --tmpfs /var/run:noexec,nosuid,size=4m \
             -p 8080:80 \
             -v "$SMOKE_DIR":/app/data \
             ghcr.io/${{ github.repository }}:smoke

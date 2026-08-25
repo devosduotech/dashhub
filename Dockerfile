@@ -36,8 +36,11 @@ RUN mkdir -p /app/data /app/config \
     && addgroup -S dashhub \
     && adduser -S -G dashhub dashhub
 
-# Nginx configuration
-COPY docker/nginx.conf /etc/nginx/http.d/default.conf
+# Nginx configuration (complete main config; replaces distro default)
+COPY docker/nginx.conf /etc/nginx/nginx.conf
+RUN rm -f /etc/nginx/http.d/default.conf \
+    && mkdir -p /var/lib/nginx/logs \
+    && ln -sf /dev/stderr /var/lib/nginx/logs/error.log
 
 # Copy built frontend
 COPY --from=frontend-builder /build/dist /usr/share/nginx/html

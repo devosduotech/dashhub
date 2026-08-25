@@ -24,11 +24,13 @@ export NODE_ENV=${NODE_ENV:-production}
 export API_PORT=${API_PORT:-48231}
 export TZ=${TZ:-UTC}
 
-# Set timezone
+# Set timezone (skip silently when /etc is read-only, e.g. read_only: true)
 if [ -n "$TZ" ]; then
-    echo "Setting timezone to $TZ..."
-    ln -snf /usr/share/zoneinfo/$TZ /etc/localtime
-    echo $TZ > /etc/timezone
+    if ln -snf "/usr/share/zoneinfo/$TZ" /etc/localtime 2>/dev/null && echo "$TZ" > /etc/timezone 2>/dev/null; then
+        echo "Setting timezone to $TZ..."
+    else
+        echo "Skipping TZ setup: /etc is read-only (using image default)"
+    fi
 fi
 
 # Start the Node.js API first (as the unprivileged dashhub user) so it is
