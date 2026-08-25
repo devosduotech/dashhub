@@ -22,7 +22,12 @@ const textareaRef = ref<HTMLTextAreaElement | null>(null)
 const editingId = ref<string | null>(null)
 const editText = ref('')
 const editPriority = ref<'low' | 'medium' | 'high'>('medium')
-const editTextareaRef = ref<HTMLTextAreaElement | null>(null)
+// Function ref: a plain string ref inside template v-for is collected as an
+// array by Vue, which broke focus/auto-resize with a TypeError.
+let editTextareaEl: HTMLTextAreaElement | null = null
+function setEditTextareaRef(el: unknown) {
+  editTextareaEl = (el as HTMLTextAreaElement) || null
+}
 
 function autoResize() {
   const el = textareaRef.value
@@ -32,7 +37,7 @@ function autoResize() {
 }
 
 function autoResizeEdit() {
-  const el = editTextareaRef.value
+  const el = editTextareaEl
   if (!el) return
   el.style.height = 'auto'
   el.style.height = Math.min(el.scrollHeight, 160) + 'px'
@@ -43,7 +48,7 @@ function startEdit(item: { id: string; text: string; priority?: 'low' | 'medium'
   editText.value = item.text
   editPriority.value = item.priority || 'medium'
   nextTick(() => {
-    const el = editTextareaRef.value
+    const el = editTextareaEl
     if (el) {
       el.focus()
       autoResizeEdit()
@@ -113,7 +118,7 @@ function deleteNote(id: string) {
             @input="autoResizeEdit"
             @keydown.enter.exact.prevent="saveEdit"
             @keydown.esc="cancelEdit"
-            ref="editTextareaRef"
+            :ref="setEditTextareaRef"
           ></textarea>
           <div class="note-edit-controls">
             <button class="note-action note-action-save" @click="saveEdit" title="Save" :disabled="!editText.trim()">
