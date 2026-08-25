@@ -138,6 +138,9 @@
 
 ## Phase 2 Roadmap
 
+> **Detailed prioritized work plan with acceptance criteria and milestones: [PHASE2.md](./PHASE2.md)**
+> Derived from the v1.0.18 security & code-quality audit (2026-08-25).
+
 ### Security
 - Credential encryption at rest (AES-256 + PBKDF2 vault)
 - Authentication (session / OIDC)
