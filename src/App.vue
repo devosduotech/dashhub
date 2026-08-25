@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { onMounted, computed } from 'vue'
+import { onMounted, computed, watch } from 'vue'
 import { useRoute } from 'vue-router'
 import { useConfigStore } from '@/stores/config'
 import EditModeToolbar from '@/components/layout/EditModeToolbar.vue'
@@ -11,6 +11,22 @@ const route = useRoute()
 
 const appFontSize = computed(() => store.appConfig.fontSize ?? 100)
 const isFullscreen = computed(() => !!route.meta.fullscreen)
+
+// Browser-tab icon follows the configured branding: an uploaded logo when
+// set in app settings, otherwise the built-in DashHub mark.
+const DEFAULT_FAVICON = '/favicon.svg'
+const faviconEl = document.querySelector<HTMLLinkElement>('link[rel="icon"]')
+
+watch(() => store.appConfig.logoUrl, (url) => {
+  if (!faviconEl) return
+  if (url) {
+    faviconEl.href = url
+    faviconEl.removeAttribute('type')
+  } else {
+    faviconEl.href = DEFAULT_FAVICON
+    faviconEl.type = 'image/svg+xml'
+  }
+}, { immediate: true })
 
 onMounted(() => {
   store.loadConfig()
