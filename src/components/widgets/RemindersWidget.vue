@@ -140,7 +140,7 @@ function deleteNote(id: string) {
             @change="toggleComplete(item.id)"
           />
           <div class="reminder-content" :class="'priority-bar-' + (item.priority || 'medium')">
-            <span class="reminder-text">{{ item.text }}</span>
+            <span class="reminder-text" title="Click to edit" @click="startEdit(item)">{{ item.text }}</span>
           </div>
           <span class="reminder-priority" :class="'priority-' + (item.priority || 'medium')">
             {{ item.priority || 'medium' }}
@@ -227,7 +227,7 @@ function deleteNote(id: string) {
   &.priority-bar-medium { border-left-color: var(--color-primary, #6366f1); }
   &.priority-bar-low { border-left-color: var(--color-text-muted, #888); }
 }
-.reminder-text { font-size: 0.875rem; color: var(--color-text); line-height: 1.4; }
+.reminder-text { font-size: 0.875rem; color: var(--color-text); line-height: 1.4; cursor: text; }
 
 .reminder-priority {
   font-size: 0.6875rem;

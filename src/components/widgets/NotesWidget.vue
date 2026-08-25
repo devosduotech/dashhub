@@ -131,7 +131,7 @@ function deleteNote(id: string) {
         </div>
         <div v-else class="note-item" :class="'priority-' + (item.priority || 'medium')">
           <div class="note-content">
-            <span class="note-text">{{ item.text }}</span>
+            <span class="note-text" title="Click to edit" @click="startEdit(item)">{{ item.text }}</span>
           </div>
           <span class="note-priority" :class="'priority-' + (item.priority || 'medium')">
             {{ item.priority || 'medium' }}
@@ -209,7 +209,7 @@ function deleteNote(id: string) {
 }
 
 .note-content { flex: 1; min-width: 0; }
-.note-text { font-size: 0.875rem; color: var(--color-text); line-height: 1.4; white-space: pre-wrap; word-break: break-word; }
+.note-text { font-size: 0.875rem; color: var(--color-text); line-height: 1.4; white-space: pre-wrap; word-break: break-word; cursor: text; }
 
 .note-priority {
   font-size: 0.6875rem;
