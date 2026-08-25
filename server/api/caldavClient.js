@@ -191,7 +191,6 @@ export async function fetchEvents(baseUrl, username, password, calendarUrl, star
   const startStr = start.toISOString().replace(/[-:]/g, '').split('.')[0] + 'Z'
   const endStr = end.toISOString().replace(/[-:]/g, '').split('.')[0] + 'Z'
 
-  console.log(`[caldav] fetching events from ${calFullUrl} (${startStr} to ${endStr})`)
 
   const body = `<?xml version="1.0" encoding="utf-8" ?>
 <C:calendar-query xmlns:D="DAV:" xmlns:C="urn:ietf:params:xml:ns:caldav">
@@ -227,7 +226,6 @@ export async function fetchEvents(baseUrl, username, password, calendarUrl, star
     events.push(...parsed)
   }
 
-  console.log(`[caldav] found ${events.length} events`)
 
   events.sort((a, b) => {
     if (!a.start) return 1
@@ -286,7 +284,6 @@ SUMMARY:${summary}`
     'Content-Type': 'text/calendar; charset=utf-8'
   }
 
-  console.log(`[caldav] creating event at ${eventUrl}`)
 
   const res = await fetch(eventUrl, { method: 'PUT', headers, body: ics })
   if (!res.ok && res.status !== 201 && res.status !== 204) {
@@ -313,7 +310,6 @@ export async function deleteEvent(baseUrl, username, password, calendarUrl, even
     'Authorization': authHeader(username, password)
   }
 
-  console.log(`[caldav] deleting event at ${eventUrl}`)
 
   const res = await fetch(eventUrl, { method: 'DELETE', headers })
   if (!res.ok && res.status !== 204 && res.status !== 404) {

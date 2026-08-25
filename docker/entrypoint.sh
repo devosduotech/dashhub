@@ -13,8 +13,11 @@ mkdir -p /app/data 2>/dev/null || true
 if ! chown -R dashhub:dashhub /app/data 2>/dev/null; then
     echo "[entrypoint] WARNING: could not chown /app/data (restricted capabilities or read-only volume)."
     echo "[entrypoint] Assuming existing ownership is correct. If the app hits permission"
-    echo "[entrypoint] errors, fix ownership on the host, e.g.:"
+    echo "[entrypoint] errors, either fix ownership on the host:"
     echo "[entrypoint]   sudo chown -R $(id -u dashhub):$(id -g dashhub) <host-data-dir>"
+    echo "[entrypoint] or make sure your docker-compose.yml grants bootstrap capabilities"
+    echo "[entrypoint] (CHOWN, DAC_OVERRIDE, FOWNER, SETGID, SETUID) — re-download it from"
+    echo "[entrypoint] the current release if it predates this version."
 fi
 
 # Initialize configuration if not present
