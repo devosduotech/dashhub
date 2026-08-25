@@ -48,23 +48,45 @@ export function calcAvgLatency(entries: UptimeEntry[]): number {
 
 const HOUR_MS = 60 * 60 * 1000
 
-export function buildUptimeBar(entries: UptimeEntry[], windowMs: number = HOUR_MS): Array<{ status: 'up' | 'down' | 'unknown'; hours: number }> {
-  if (entries.length === 0) return []
+// Fine-grained bucketing for the compact 1-hour bar: 12 x 5-minute slots,
+// so a recovered endpoint turns green on the next slot instead of staying
+// red for up to an hour (worst-check-in-bucket semantics kept per slot).
+export const BAR_BUCKET_1H_MS = 5 * 60 * 1000
+
+export function formatDuration(ms: number): string {
+  const totalMinutes = Math.round(ms / (60 * 1000))
+  if (totalMinutes < 60) return `${totalMinutes}m`
+  const hours = Math.floor(totalMinutes / 60)
+  const minutes = totalMinutes % 60
+  return minutes > 0 ? `${hours}h ${minutes}m` : `${hours}h`
+}
+
+export interface UptimeSegment {
+  status: 'up' | 'down' | 'unknown'
+  count: number
+}
+
+export function buildUptimeBar(
+  entries: UptimeEntry[],
+  windowMs: number = HOUR_MS,
+  bucketMs: number = HOUR_MS
+): UptimeSegment[] {
+  if (entries.length === 0 || bucketMs <= 0) return []
 
   const sorted = [...entries].sort((a, b) =>
     new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime()
   )
 
-  const segments: Array<{ status: 'up' | 'down' | 'unknown'; hours: number }> = []
+  const segments: UptimeSegment[] = []
   const now = Date.now()
   const start = now - windowMs
 
-  const buckets = Math.ceil(windowMs / HOUR_MS)
+  const buckets = Math.ceil(windowMs / bucketMs)
   const bucketStatus: Array<'up' | 'down' | 'unknown'> = new Array(buckets).fill('unknown')
 
   for (const entry of sorted) {
     const ts = new Date(entry.timestamp).getTime()
-    const bucketIdx = Math.floor((ts - start) / HOUR_MS)
+    const bucketIdx = Math.floor((ts - start) / bucketMs)
     if (bucketIdx >= 0 && bucketIdx < buckets) {
       if (entry.status === 'down') {
         bucketStatus[bucketIdx] = 'down'
@@ -80,12 +102,12 @@ export function buildUptimeBar(entries: UptimeEntry[], windowMs: number = HOUR_M
     if (status === currentStatus) {
       count++
     } else {
-      segments.push({ status: currentStatus, hours: count })
+      segments.push({ status: currentStatus, count })
       currentStatus = status
       count = 1
     }
   }
-  segments.push({ status: currentStatus, hours: count })
+  segments.push({ status: currentStatus, count })
 
   return segments
 }

@@ -7,6 +7,8 @@ import {
   calcUptimePercent,
   calcAvgLatency,
   buildUptimeBar,
+  formatDuration,
+  BAR_BUCKET_1H_MS,
   type UptimeEntry
 } from '@/services/uptime'
 import AppIcon from '@/components/ui/AppIcon.vue'
@@ -84,11 +86,15 @@ function getEntries7d(id: string): UptimeEntry[] {
 }
 
 function getBarSegments(id: string) {
-  return buildUptimeBar(getEntries1h(id), HOUR_MS)
+  return buildUptimeBar(getEntries1h(id), HOUR_MS, BAR_BUCKET_1H_MS)
 }
 
 function get7DayBarSegments(id: string) {
   return buildUptimeBar(getEntries7d(id), SEVEN_DAYS_MS)
+}
+
+function segmentTitle(status: string, count: number, bucketMs: number) {
+  return `${status}: ${formatDuration(count * bucketMs)}`
 }
 
 function getUptime(id: string) {
@@ -169,10 +175,10 @@ onUnmounted(() => {
             :key="i"
             class="bar-segment"
             :style="{
-              flex: seg.hours,
+              flex: seg.count,
               backgroundColor: statusColor(seg.status)
             }"
-            :title="`${seg.status}: ${seg.hours}h`"
+            :title="segmentTitle(seg.status, seg.count, BAR_BUCKET_1H_MS)"
           ></div>
         </div>
 
@@ -215,10 +221,10 @@ onUnmounted(() => {
                   :key="i"
                   class="bar-segment"
                   :style="{
-                    flex: seg.hours,
+                    flex: seg.count,
                     backgroundColor: statusColor(seg.status)
                   }"
-                  :title="`${seg.status}: ${seg.hours}h`"
+                  :title="segmentTitle(seg.status, seg.count, HOUR_MS)"
                 ></div>
               </div>
               <span class="history-uptime">{{ get7DayUptime(historyEndpoint) }}% uptime</span>
@@ -232,10 +238,10 @@ onUnmounted(() => {
                   :key="i"
                   class="bar-segment"
                   :style="{
-                    flex: seg.hours,
+                    flex: seg.count,
                     backgroundColor: statusColor(seg.status)
                   }"
-                  :title="`${seg.status}: ${seg.hours}h`"
+                  :title="segmentTitle(seg.status, seg.count, BAR_BUCKET_1H_MS)"
                 ></div>
               </div>
               <span class="history-uptime">{{ getUptime(historyEndpoint) }}% uptime</span>
