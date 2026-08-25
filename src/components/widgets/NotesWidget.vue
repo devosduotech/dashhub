@@ -115,17 +115,19 @@ function deleteNote(id: string) {
             @keydown.esc="cancelEdit"
             ref="editTextareaRef"
           ></textarea>
-          <select v-model="editPriority" class="note-edit-priority">
-            <option value="low">Low</option>
-            <option value="medium">Med</option>
-            <option value="high">High</option>
-          </select>
-          <button class="note-action note-action-save" @click="saveEdit" title="Save" :disabled="!editText.trim()">
-            <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
-          </button>
-          <button class="note-action note-action-cancel" @click="cancelEdit" title="Cancel">
-            <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
-          </button>
+          <div class="note-edit-controls">
+            <button class="note-action note-action-save" @click="saveEdit" title="Save" :disabled="!editText.trim()">
+              <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
+            </button>
+            <select v-model="editPriority" class="note-edit-priority">
+              <option value="low">Low</option>
+              <option value="medium">Med</option>
+              <option value="high">High</option>
+            </select>
+            <button class="note-action note-action-cancel" @click="cancelEdit" title="Cancel">
+              <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+            </button>
+          </div>
         </div>
         <div v-else class="note-item" :class="'priority-' + (item.priority || 'medium')">
           <div class="note-content">
@@ -278,15 +280,25 @@ function deleteNote(id: string) {
   &:focus { outline: none; border-color: var(--color-primary); }
 }
 
+.note-edit-controls {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  justify-content: space-between;
+  gap: 0.25rem;
+  flex-shrink: 0;
+}
+
 .note-edit-priority {
-  padding: 0.375rem 0.375rem;
+  padding: 0.25rem 0.375rem;
   background-color: var(--color-bg);
   border: 1px solid var(--color-border);
   border-radius: 6px;
   color: var(--color-text);
-  font-size: 0.75rem;
+  font-size: 0.6875rem;
   cursor: pointer;
-  flex-shrink: 0;
+  width: 100%;
+  min-width: 0;
 
   &:focus { outline: none; border-color: var(--color-primary); }
 }
