@@ -17,6 +17,17 @@ delivers the committed feature/widget roadmap.
 
 ---
 
+## Progress Log
+
+Completed or partially completed since the audit (2026-08-25):
+
+- ✅ **P1-3 / C6 — Read-only container crash loop** (`0cfc44e`, `7dc3504`): entrypoint TZ/chown guarded non-fatal, complete nginx main config with `/tmp` temp paths + stderr error log, minimal bootstrap cap set (CHOWN/DAC_OVERRIDE/FOWNER/SETGID/SETUID) dropped at runtime via `su-exec`. CI smoke test now runs with `--read-only` + matching cap/tmpfs flags, permanently gating this failure class. Verified: healthy boot with root-owned data volumes under full flag set.
+- ✅ **M6 — Stale app after upgrade** (`85356b1`): `index.html` served with `Cache-Control: no-cache`; security headers repeated inside the location per nginx `add_header` inheritance rules.
+- ◐ **P2-19 — Debug logging** (`38073aa`): CalDAV client per-request logs removed. *Remaining:* `server.js` create-event dump, CalendarWidget console.log.
+- ◐ **P3-8 — nginx/CI polish** (`0cfc44e`, `85356b1`): `server_tokens off`, access log off, error log → stderr, SPA cache policy done. *Remaining:* SBOM/cosign signing, CI `timeout-minutes`, per-job permissions, `X-Forwarded-Proto`, gzip types.
+
+---
+
 ## Priority 0 — Critical Security Remediations (blockers)
 
 | ID | Finding | Item | Files | Effort |
@@ -74,7 +85,7 @@ delivers the committed feature/widget roadmap.
 |----|---------|------|--------|
 | P1-1 | H3 | Opaque error codes to clients; internal detail logged server-side only | S |
 | P1-2 | H4, H5 | Consistent host-key verification: add `hostVerifier` to `sshUtils.buildSshConfig`; restore frontend TOFU prompt (remove auto-accept in `TerminalModal.vue` / `SshTerminalPage.vue`) | M |
-| P1-3 | C6 | Fix read-only container crash loop: guard TZ writes in `entrypoint.sh` (skip if target correct/read-only), tmpfs for `/var/lib/nginx` | S |
+| P1-3 | C6 | ~~Fix read-only container crash loop~~ **✅ Done** — see Progress Log | S |
 | P1-4 | H7 | Add `client_max_body_size 2m` (and larger for speedtest upload route) to `nginx.conf` | S |
 | P1-5 | H6 | CI pre-merge gating: add `push: branches:[develop,v1]` + `pull_request` triggers running gate job (no publish) | S |
 | P1-6 | H8 | Extend `.dockerignore`: `data/`, `data-dev/`, `*.png` root images, `.env` | S |

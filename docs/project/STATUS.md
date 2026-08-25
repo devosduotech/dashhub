@@ -3,7 +3,7 @@
 > **Purpose:** Track exactly what is implemented, partially implemented, or planned.
 > This document is the source of truth for reconciling the Project Report against the codebase.
 >
-> Last updated: 2026-08-24 | Version: **1.0.18**
+> Last updated: 2026-08-25 | Version: **1.0.18**
 
 ## Legend
 
@@ -37,12 +37,12 @@
 | Clock widget | Implemented | Live-updating time and date display with timezone selection, format options, hide seconds/date toggles |
 | Public IP widget | Implemented | Displays public IP address and location info with refresh; server-side proxy mode |
 | GitHub Trending widget | Implemented | Shows trending repositories from GitHub sorted by stars; configurable time period, language filter |
-| Notes widget | Implemented | Personal text notes with priority, quick-add, sort by date or priority, delete on hover |
-| Reminders widget | Implemented | Task reminders with checkboxes, completion tracking, priority badges, strikethrough for completed items |
+| Notes widget | Implemented | Personal text notes with priority; inline editing (click text or hover pencil — wide textarea, stacked ✓/priority/✕), full-width display rows with hover action cluster |
+| Reminders widget | Implemented | Task reminders with checkboxes, completion tracking, priority badges; inline editing matching Notes behavior |
 | Status Indicators widget | Implemented | Monitor endpoints with color-coded health dots, category grouping, latency display, auto-refresh |
 | Speedtest widget | Implemented | Network speed test (ping, jitter, download, upload), live SVG gauge, parallel streams, peak throughput |
 | Weather widget | Implemented | Current conditions, 5-day forecast, location search via Open-Meteo, selectable units, auto-refresh |
-| Server Uptime widget | Implemented | Monitor multiple endpoints, visual 1h/7-day uptime bar, history modal with check log |
+| Server Uptime widget | Implemented | Monitor multiple endpoints, visual 1h bar (12 × 5-min segments) + 7-day uptime, history modal with check log |
 | Calendar widget | Implemented | Month view and upcoming events via CalDAV; create/delete events, day-click panel, rolling 30-day upcoming window |
 | System Info widget | Implemented | CPU, RAM, Disk, Network monitoring via SSH with regex-based section extraction |
 | Process List widget | Implemented | Monitor server processes through SSH with sortable tables, summary cards, top-3 highlighting, mini usage bars |
@@ -54,7 +54,7 @@
 | App settings | Implemented | Title, theme (dark/light/auto), font size, logo upload/library, footer text |
 | Runtime theming | Implemented | `data-theme` CSS variables; auto follows OS preference; 14px base font for all themes |
 | Media library | Implemented | Uploaded icons/images stored in `data/uploads/`, referenced by path, reusable via MediaPicker |
-| Icon system | Implemented | Reusable SVG `AppIcon` (typed registry, no deps); `AppLogo` mark/wordmark |
+| Icon system | Implemented | Reusable SVG `AppIcon` (typed registry, no deps); `AppLogo` mark/wordmark; branded favicon synced to configured logo |
 | Empty states | Implemented | Reusable `AppEmptyState` with brand mark and CTA |
 | Edit-mode indication | Implemented | Editing badge, tinted toolbar, subtle background shift |
 | Drag & drop targets | Implemented | Visible drop zones + highlighted destination column while dragging |
@@ -130,6 +130,7 @@
 | Health check | Implemented | nginx endpoint via wget |
 | Automated tests | Implemented | Vitest + supertest suite (`npm test`, 59 tests) |
 | Lint / typecheck | Implemented | `npm run lint`, `npm run typecheck` |
+| Read-only rootfs compatible | Implemented | nginx temp paths in `/tmp`, entrypoint TZ/chown guarded, minimal bootstrap caps dropped at runtime; CI smoke test runs `--read-only` |
 | CI/CD pipeline | Implemented | GitHub Actions: gate → buildx multi-arch → smoke test → GHCR push |
 | Multi-arch images | Implemented | linux/amd64 + linux/arm64 via buildx |
 | Docker image registry | Implemented | `ghcr.io/devosduotech/dashhub` with versioned + latest tags |

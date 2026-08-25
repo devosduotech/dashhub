@@ -1,6 +1,6 @@
 # OSDuo DashHub — Security
 
-> Last updated: 2026-08-24 | Version: **1.0.18**
+> Last updated: 2026-08-25 | Version: **1.0.18**
 
 ## Deployment Boundary (Phase 1)
 
@@ -39,7 +39,7 @@ SSH credentials in a plaintext config file.
 - **Non-root container** — The Node API runs as the unprivileged `dashhub` user.
 - **Modern runtime** — Node 24 LTS; `npm ci` for reproducible installs.
 - **Security headers** — `X-Content-Type-Options: nosniff`, `X-Frame-Options: SAMEORIGIN`, `Referrer-Policy: strict-origin-when-cross-origin`.
-- **Docker hardening** — Read-only root filesystem, `no-new-privileges`, drop all capabilities except `NET_BIND_SERVICE`, tmpfs for temp directories.
+- **Docker hardening** — Read-only root filesystem (nginx temp paths pinned to `/tmp`, entrypoint TZ/chown guarded), `no-new-privileges`, `cap_drop ALL` plus a minimal bootstrap set (CHOWN, DAC_OVERRIDE, FOWNER, SETGID, SETUID) used only to prepare the data dir and dropped irreversibly when the API assumes the unprivileged `dashhub` user; `NET_BIND_SERVICE` retained for nginx. CI smoke test runs with the identical flag set.
 
 ---
 

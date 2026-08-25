@@ -2,30 +2,44 @@
 
 All notable changes to OSDuo DashHub will be documented in this file.
 
-> Current version: **1.0.18** (2026-08-24)
+> Current version: **1.0.18** (2026-08-25)
 
-## [1.0.18] - 2026-08-24
+## [1.0.18] - 2026-08-25
 
 ### Added
 - **CalDAV event management** — create and delete events directly from the Calendar widget via CalDAV protocol; day-click panel in month view with add/delete event forms
 - **CalDAV credential persistence** — credentials resolved server-side by widget ID (`getWidgetConfig`), eliminating dependency on sanitized frontend state; `password` no longer lost after page refresh
+- **Inline note & reminder editing** — click any note/reminder text (or the hover pencil) to open an inline editor: auto-resizing wide textarea with stacked ✓ save / priority / ✕ cancel column; Enter saves, Escape cancels; priority badges and priority-sorting update immediately
+- **Full-width display rows** — Notes/Reminders text spans the full widget width in display view; priority badge and edit/delete buttons float in as a top-right hover cluster (also on keyboard focus); priority remains glanceable via the colored left border
+- **Branded favicon** — browser tab icon is the DashHub logo mark, and automatically follows a custom logo uploaded in app settings (`appConfig.logoUrl` sync watcher in `App.vue`)
 - **GitHub Releases proxy** — server-side GitHub API proxy at `/api/github/releases` with 24h in-memory cache; client-side version cache with 24h TTL in `versions.ts`
 - **GITHUB_TOKEN support** — optional GitHub Personal Access Token for 5000 req/hour API rate limit (`GITHUB_TOKEN` env var in docker-compose.yml and .env.example)
 - **Upcoming rolling window** — Calendar upcoming mode fetches rolling 30 days from today instead of current calendar month
+- **Phase 2 work plan** — `docs/project/PHASE2.md`: prioritized P0–P3 security remediation plan derived from a full v1.0.18 code audit, with acceptance criteria, effort estimates, credential vault design sketch, and six delivery milestones
 
 ### Changed
 - **Versions widget expand** — versions list now expands naturally like Notes/Reminders instead of using a fixed-height scrollable list (`max-height: 220px` removed)
 - **Calendar base font size** — 14px default for all themes via `html { font-size: 14px; }` in `theme-dark.scss`
 - **Dashboard vertical overflow** — flex layout (`flex: 1; min-height: 0; overflow-y: auto`) replaces `min-height: calc(100vh - 5.5rem)` to prevent unnecessary page scrolling
+- **nginx complete main config** — shipped as `/etc/nginx/nginx.conf` replacing distro defaults; temp paths pinned to `/tmp` (read-only rootfs safe), `server_tokens off`, access log off, error log to stderr
+- **Minimal bootstrap capabilities** — compose `cap_add` restores CHOWN/DAC_OVERRIDE/FOWNER/SETGID/SETUID alongside NET_BIND_SERVICE so root can prepare the bind-mounted data dir, then `su-exec` drops irreversibly to the unprivileged runtime
+- **CalDAV debug logs removed** — per-request console logging (calendar URLs) stripped from production paths
 
 ### Fixed
+- **Uptime bar stuck red** — compact 1-hour bar rendered as a single worst-check bucket, pinning it red up to an hour after recovery; now renders 12 × 5-minute segments (status-page style) with duration-aware tooltips; 7-day history unchanged
+- **Stale app after upgrade** — `index.html` now served with `Cache-Control: no-cache` (security headers correctly repeated inside the location per nginx `add_header` inheritance), so browsers pick up new releases immediately
+- **Read-only container crash loop** — entrypoint TZ setup aborted under `set -e` on read-only rootfs; now skips gracefully. nginx temp/log paths made read-only-safe. CI smoke test runs with `--read-only` + restricted capabilities matching compose, gating this failure class permanently
+- **Restricted-capability bootstrap** — `cap_drop ALL` removed `CAP_CHOWN`, crash-looping on data-dir ownership; entrypoint chown/mkdir are non-fatal with actionable repair hints
+- **Move-to-page dropdown clipped** — dropdown teleported to `body` with fixed positioning from the trigger button rect, escaping the widget's `overflow: hidden`; adds click-outside-to-close
+- **Favicon 404 noise** — Dockerfile frontend stage now copies `public/` (was silently missing from published images); legacy `/favicon.ico` requests answered with a logged-silent 204
+- **Editor focus TypeError** — editor textarea used a string template ref inside `template v-for` (populated as an array by Vue); replaced with function refs in both widgets
 - **SSH host key test** — `generateHostKey` now uses `ssh-keygen` for Node 20/24 compatibility (replaces `crypto.generateKeyPairSync` with `openssh` export)
 - **CalDAV date timezone** — `toISOString` replaced with local date components to prevent timezone shift
 - **Calendar duplicate refresh** — removed duplicate refresh button in CalendarWidget
 - **GitHub Actions Node.js 24** — upgraded to `checkout@v5`, `setup-node@v5`, docker actions `v4/v6/v7`
 
 ### Infrastructure
-- **CI/CD** — full gate (typecheck, lint, tests, build) → buildx multi-arch → smoke test → GHCR push
+- **CI/CD** — full gate (typecheck, lint, tests, build) → buildx multi-arch → smoke test (health, config init, unprivileged runtime — now with `--read-only` + capability flags mirroring compose) → GHCR push
 - **arm64 Docker build** — multi-architecture support via buildx (amd64 + arm64)
 - **SSH auto-accept** — host key auto-acceptance for terminal sessions
 - **SSH multi-tab** — open multiple SSH terminals via `+` button

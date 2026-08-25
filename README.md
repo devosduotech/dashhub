@@ -59,8 +59,8 @@ Instead of replacing your existing tools, DashHub brings them together:
 ### Productivity
 
 - **Calendar** — Month view and upcoming events from Nextcloud/CalDAV with event creation/deletion
-- **Notes** — Personal notes with priority
-- **Reminders** — Task reminders with completion tracking
+- **Notes** — Personal notes with priority and inline editing (click any note to edit)
+- **Reminders** — Task reminders with completion tracking and inline editing
 - **Clock** — Live time and date display
 
 ### Network & Utilities
