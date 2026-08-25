@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, computed, defineAsyncComponent, h } from 'vue'
+import { ref, computed, defineAsyncComponent, h, onBeforeUnmount } from 'vue'
 import type { PageItem, WidgetConfig } from '@/types/config'
 import { useConfigStore } from '@/stores/config'
 import { widgetRegistry } from './registry'
@@ -64,8 +64,34 @@ function removeWidget() {
 function moveToPage(toPageIndex: number) {
   store.moveWidgetBetweenPages(props.pageIndex, toPageIndex, props.item.id)
   store.setActivePage(toPageIndex)
-  showMoveDropdown.value = false
+  closeMoveDropdown()
 }
+
+const moveBtnRef = ref<HTMLElement | null>(null)
+const dropdownStyle = ref<{ top: string; right: string }>({ top: '0px', right: '0px' })
+
+function toggleMoveDropdown() {
+  if (showMoveDropdown.value) {
+    closeMoveDropdown()
+    return
+  }
+  showMoveDropdown.value = true
+  const r = moveBtnRef.value?.getBoundingClientRect()
+  if (r) {
+    dropdownStyle.value = {
+      top: `${r.bottom + 4}px`,
+      right: `${window.innerWidth - r.right}px`
+    }
+  }
+  setTimeout(() => document.addEventListener('click', closeMoveDropdown), 0)
+}
+
+function closeMoveDropdown() {
+  showMoveDropdown.value = false
+  document.removeEventListener('click', closeMoveDropdown)
+}
+
+onBeforeUnmount(() => document.removeEventListener('click', closeMoveDropdown))
 
 const otherPages = computed(() => {
   return store.pages
@@ -90,18 +116,21 @@ const otherPages = computed(() => {
         ><AppIcon name="settings" :size="15" /></button>
         <div v-if="store.editMode && otherPages.length > 0" class="move-dropdown-wrapper">
           <button
+            ref="moveBtnRef"
             class="widget-btn"
             title="Move to page"
-            @click="showMoveDropdown = !showMoveDropdown"
+            @click="toggleMoveDropdown"
           ><AppIcon name="external-link" :size="15" /></button>
-          <div v-if="showMoveDropdown" class="move-dropdown">
-            <button
-              v-for="{ page, index } in otherPages"
-              :key="page.id"
-              class="move-option"
-              @click="moveToPage(index)"
-            >{{ page.name }}</button>
-          </div>
+          <Teleport to="body">
+            <div v-if="showMoveDropdown" class="move-dropdown move-dropdown-fixed" :style="dropdownStyle">
+              <button
+                v-for="{ page, index } in otherPages"
+                :key="page.id"
+                class="move-option"
+                @click="moveToPage(index)"
+              >{{ page.name }}</button>
+            </div>
+          </Teleport>
         </div>
         <button
           v-if="store.editMode"
@@ -220,16 +249,16 @@ const otherPages = computed(() => {
 }
 
 .move-dropdown {
-  position: absolute;
-  top: 100%;
-  right: 0;
-  margin-top: 0.25rem;
   background-color: var(--color-bg-elevated);
   border: 1px solid var(--color-border);
   border-radius: 6px;
   padding: 0.25rem;
   min-width: 140px;
-  z-index: 100;
+}
+
+.move-dropdown-fixed {
+  position: fixed;
+  z-index: 1100;
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
 }
 
