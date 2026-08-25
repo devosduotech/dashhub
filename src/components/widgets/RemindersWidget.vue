@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, computed } from 'vue'
+import { ref, computed, nextTick } from 'vue'
 import type { RemindersWidgetConfig } from '@/types/config'
 
 const props = defineProps<{
@@ -18,6 +18,48 @@ const sortBy = computed(() => cfg.value.sortBy || 'created')
 
 const newNoteText = ref('')
 const newNotePriority = ref<'low' | 'medium' | 'high'>('medium')
+
+const editingId = ref<string | null>(null)
+const editText = ref('')
+const editPriority = ref<'low' | 'medium' | 'high'>('medium')
+const editTextareaRef = ref<HTMLTextAreaElement | null>(null)
+
+function autoResizeEdit() {
+  const el = editTextareaRef.value
+  if (!el) return
+  el.style.height = 'auto'
+  el.style.height = Math.min(el.scrollHeight, 160) + 'px'
+}
+
+function startEdit(item: { id: string; text: string; priority?: 'low' | 'medium' | 'high' }) {
+  editingId.value = item.id
+  editText.value = item.text
+  editPriority.value = item.priority || 'medium'
+  nextTick(() => {
+    const el = editTextareaRef.value
+    if (el) {
+      el.focus()
+      autoResizeEdit()
+      el.setSelectionRange(el.value.length, el.value.length)
+    }
+  })
+}
+
+function cancelEdit() {
+  editingId.value = null
+  editText.value = ''
+}
+
+function saveEdit() {
+  if (!editingId.value) return
+  const text = editText.value.trim()
+  if (!text) return
+  const allItems = items.value.map(i =>
+    i.id === editingId.value ? { ...i, text, priority: editPriority.value } : i
+  )
+  emit('update', { ...props.config, items: allItems })
+  cancelEdit()
+}
 
 const sortedItems = computed(() => {
   const filtered = showCompleted.value ? [...items.value] : items.value.filter(i => !i.completed)
@@ -64,28 +106,51 @@ function deleteNote(id: string) {
     </div>
 
     <div v-if="sortedItems.length > 0" class="reminders-list">
-      <div
-        v-for="item in sortedItems"
-        :key="item.id"
-        class="reminder-item"
-        :class="{ completed: item.completed }"
-      >
-        <input
-          type="checkbox"
-          class="reminder-checkbox"
-          :checked="item.completed"
-          @change="toggleComplete(item.id)"
-        />
-        <div class="reminder-content" :class="'priority-bar-' + (item.priority || 'medium')">
-          <span class="reminder-text">{{ item.text }}</span>
+      <template v-for="item in sortedItems" :key="item.id">
+        <div v-if="editingId === item.id" class="reminder-item reminder-item-editing">
+          <input type="checkbox" class="reminder-checkbox" :checked="item.completed" @change="toggleComplete(item.id)" />
+          <textarea
+            v-model="editText"
+            class="reminder-edit-input"
+            rows="2"
+            @input="autoResizeEdit"
+            @keydown.enter.exact.prevent="saveEdit"
+            @keydown.esc="cancelEdit"
+            ref="editTextareaRef"
+          ></textarea>
+          <select v-model="editPriority" class="reminder-edit-priority">
+            <option value="low">Low</option>
+            <option value="medium">Med</option>
+            <option value="high">High</option>
+          </select>
+          <button class="reminder-action reminder-action-save" @click="saveEdit" title="Save" :disabled="!editText.trim()">
+            <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
+          </button>
+          <button class="reminder-action reminder-action-cancel" @click="cancelEdit" title="Cancel">
+            <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+          </button>
         </div>
-        <span class="reminder-priority" :class="'priority-' + (item.priority || 'medium')">
-          {{ item.priority || 'medium' }}
-        </span>
-        <button class="reminder-delete" @click="deleteNote(item.id)" title="Delete">
-          <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
-        </button>
-      </div>
+        <div v-else class="reminder-item" :class="{ completed: item.completed }">
+          <input
+            type="checkbox"
+            class="reminder-checkbox"
+            :checked="item.completed"
+            @change="toggleComplete(item.id)"
+          />
+          <div class="reminder-content" :class="'priority-bar-' + (item.priority || 'medium')">
+            <span class="reminder-text">{{ item.text }}</span>
+          </div>
+          <span class="reminder-priority" :class="'priority-' + (item.priority || 'medium')">
+            {{ item.priority || 'medium' }}
+          </span>
+          <button class="reminder-action reminder-edit-btn" @click="startEdit(item)" title="Edit">
+            <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 3a2.828 2.828 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5L17 3z"></path></svg>
+          </button>
+          <button class="reminder-action reminder-delete" @click="deleteNote(item.id)" title="Delete">
+            <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+          </button>
+        </div>
+      </template>
     </div>
 
     <div class="quick-add">
@@ -130,11 +195,16 @@ function deleteNote(id: string) {
   transition: background-color 150ms ease;
 
   &:last-child { border-bottom: none; }
-  &:hover { background-color: var(--color-bg-hover); .reminder-delete { opacity: 1; } }
+  &:hover { background-color: var(--color-bg-hover); .reminder-action { opacity: 1; } }
 
   &.completed {
     .reminder-text { text-decoration: line-through; color: var(--color-text-muted); }
   }
+}
+
+.reminder-item-editing {
+  align-items: flex-start;
+  background-color: var(--color-bg-hover);
 }
 
 .reminder-checkbox {
@@ -171,7 +241,7 @@ function deleteNote(id: string) {
   &.priority-low { color: var(--color-text-muted); background-color: var(--color-bg); }
 }
 
-.reminder-delete {
+.reminder-action {
   display: flex;
   align-items: center;
   justify-content: center;
@@ -185,7 +255,58 @@ function deleteNote(id: string) {
   transition: all 150ms ease;
   flex-shrink: 0;
 
+  &:hover { background-color: var(--color-bg); }
+}
+
+.reminder-edit-btn:hover { color: var(--color-primary); }
+
+.reminder-delete:hover { color: var(--color-danger); background-color: var(--color-danger-dim); }
+
+.reminder-action-save,
+.reminder-action-cancel {
+  opacity: 1;
+
+  &:disabled { opacity: 0.4; cursor: not-allowed; }
+}
+
+.reminder-action-save {
+  color: var(--color-primary);
+  &:hover:not(:disabled) { color: var(--color-primary-hover); background-color: var(--color-primary-dim); }
+}
+
+.reminder-action-cancel {
   &:hover { color: var(--color-danger); background-color: var(--color-danger-dim); }
+}
+
+.reminder-edit-input {
+  flex: 1;
+  padding: 0.375rem 0.625rem;
+  background-color: var(--color-bg);
+  border: 1px solid var(--color-border);
+  border-radius: 6px;
+  color: var(--color-text);
+  font-size: 0.8125rem;
+  min-width: 0;
+  font-family: inherit;
+  resize: none;
+  overflow-y: auto;
+  line-height: 1.4;
+  max-height: 160px;
+
+  &:focus { outline: none; border-color: var(--color-primary); }
+}
+
+.reminder-edit-priority {
+  padding: 0.375rem 0.375rem;
+  background-color: var(--color-bg);
+  border: 1px solid var(--color-border);
+  border-radius: 6px;
+  color: var(--color-text);
+  font-size: 0.75rem;
+  cursor: pointer;
+  flex-shrink: 0;
+
+  &:focus { outline: none; border-color: var(--color-primary); }
 }
 
 .quick-add {
