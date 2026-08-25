@@ -147,15 +147,17 @@ function deleteNote(id: string) {
           <div class="reminder-content" :class="'priority-bar-' + (item.priority || 'medium')">
             <span class="reminder-text" title="Click to edit" @click="startEdit(item)">{{ item.text }}</span>
           </div>
-          <span class="reminder-priority" :class="'priority-' + (item.priority || 'medium')">
-            {{ item.priority || 'medium' }}
-          </span>
-          <button class="reminder-action reminder-edit-btn" @click="startEdit(item)" title="Edit">
-            <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 3a2.828 2.828 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5L17 3z"></path></svg>
-          </button>
-          <button class="reminder-action reminder-delete" @click="deleteNote(item.id)" title="Delete">
-            <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
-          </button>
+          <div class="reminder-floating">
+            <span class="reminder-priority" :class="'priority-' + (item.priority || 'medium')">
+              {{ item.priority || 'medium' }}
+            </span>
+            <button class="reminder-action reminder-edit-btn" @click="startEdit(item)" title="Edit">
+              <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 3a2.828 2.828 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5L17 3z"></path></svg>
+            </button>
+            <button class="reminder-action reminder-delete" @click="deleteNote(item.id)" title="Delete">
+              <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+            </button>
+          </div>
         </div>
       </template>
     </div>
@@ -194,19 +196,48 @@ function deleteNote(id: string) {
 .reminders-list { display: flex; flex-direction: column; }
 
 .reminder-item {
+  position: relative;
   display: flex;
-  align-items: center;
+  align-items: flex-start;
   gap: 0.625rem;
   padding: 0.5rem 0.625rem;
   border-bottom: 1px solid var(--color-border);
   transition: background-color 150ms ease;
 
   &:last-child { border-bottom: none; }
-  &:hover { background-color: var(--color-bg-hover); .reminder-action { opacity: 1; } }
+
+  &:hover {
+    background-color: var(--color-bg-hover);
+    .reminder-floating { opacity: 1; pointer-events: auto; }
+  }
+
+  &:focus-within {
+    .reminder-floating { opacity: 1; pointer-events: auto; }
+  }
 
   &.completed {
     .reminder-text { text-decoration: line-through; color: var(--color-text-muted); }
   }
+}
+
+/* Floating badge + actions: zero layout footprint, so the reminder text
+   spans the full widget width in display view. */
+.reminder-floating {
+  position: absolute;
+  top: 0.25rem;
+  right: 0.375rem;
+  display: flex;
+  align-items: center;
+  gap: 0.375rem;
+  padding: 0.125rem 0.375rem;
+  border-radius: 6px;
+  background-color: var(--color-surface);
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.25);
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 150ms ease;
+
+  .reminder-action { opacity: 1; }
 }
 
 .reminder-item-editing {

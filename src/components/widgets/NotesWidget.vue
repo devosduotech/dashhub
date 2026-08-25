@@ -138,15 +138,17 @@ function deleteNote(id: string) {
           <div class="note-content">
             <span class="note-text" title="Click to edit" @click="startEdit(item)">{{ item.text }}</span>
           </div>
-          <span class="note-priority" :class="'priority-' + (item.priority || 'medium')">
-            {{ item.priority || 'medium' }}
-          </span>
-          <button class="note-action note-edit-btn" @click="startEdit(item)" title="Edit">
-            <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 3a2.828 2.828 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5L17 3z"></path></svg>
-          </button>
-          <button class="note-action note-delete" @click="deleteNote(item.id)" title="Delete">
-            <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
-          </button>
+          <div class="note-floating">
+            <span class="note-priority" :class="'priority-' + (item.priority || 'medium')">
+              {{ item.priority || 'medium' }}
+            </span>
+            <button class="note-action note-edit-btn" @click="startEdit(item)" title="Edit">
+              <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 3a2.828 2.828 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5L17 3z"></path></svg>
+            </button>
+            <button class="note-action note-delete" @click="deleteNote(item.id)" title="Delete">
+              <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+            </button>
+          </div>
         </div>
       </template>
     </div>
@@ -190,8 +192,9 @@ function deleteNote(id: string) {
 .notes-list { display: flex; flex-direction: column; }
 
 .note-item {
+  position: relative;
   display: flex;
-  align-items: center;
+  align-items: flex-start;
   gap: 0.625rem;
   padding: 0.5rem 0.625rem;
   border-left: 3px solid transparent;
@@ -200,11 +203,39 @@ function deleteNote(id: string) {
   transition: background-color 150ms ease;
 
   &:last-child { border-bottom: none; }
-  &:hover { background-color: var(--color-bg-hover); .note-action { opacity: 1; } }
+
+  &:hover {
+    background-color: var(--color-bg-hover);
+    .note-floating { opacity: 1; pointer-events: auto; }
+  }
+
+  &:focus-within {
+    .note-floating { opacity: 1; pointer-events: auto; }
+  }
 
   &.priority-high { border-left-color: var(--color-danger, #ef4444); }
   &.priority-medium { border-left-color: var(--color-primary, #6366f1); }
   &.priority-low { border-left-color: var(--color-text-muted, #888); }
+}
+
+/* Floating badge + actions: zero layout footprint, so the note text
+   spans the full widget width in display view. */
+.note-floating {
+  position: absolute;
+  top: 0.25rem;
+  right: 0.375rem;
+  display: flex;
+  align-items: center;
+  gap: 0.375rem;
+  padding: 0.125rem 0.375rem;
+  border-radius: 6px;
+  background-color: var(--color-surface);
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.25);
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 150ms ease;
+
+  .note-action { opacity: 1; }
 }
 
 .note-item-editing {
