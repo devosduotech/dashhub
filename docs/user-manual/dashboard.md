@@ -42,7 +42,9 @@ Drag widgets into place
 Repeat per page
 ```
 
-> **Figure 2 — Edit Mode and widget controls** *(placeholder: `../images/edit-mode.png`)*
+> **Figure 2 — Edit Mode and widget controls**
+
+![Edit Mode and widget controls](../images/edit-mode.png)
 
 All steps below require **Edit Mode** to be enabled.
 
@@ -57,7 +59,9 @@ All steps below require **Edit Mode** to be enabled.
 2. Set **Page Name**, pick an **icon** from the icon grid, and set **Column Count** (1–6).
 3. Close the dialog — changes apply immediately.
 
-> **Figure 3 — Page configuration** *(placeholder: `../images/page-settings.png`)*
+> **Figure 3 — Page configuration**
+
+![Page configuration](../images/page-settings.png)
 
 ## Reordering pages
 
@@ -73,7 +77,9 @@ Use the page tab's **delete** control in Edit Mode. The page and its widgets are
 2. Widgets are grouped by category: **Infrastructure**, **Network**, **Productivity**, **Content**, **General**.
 3. Click a widget to add it to the current page.
 
-> **Figure 4 — Widget palette** *(placeholder: `../images/widget-palette.png`)*
+> **Figure 4 — Widget palette**
+
+![Widget palette](../images/widget-palette.png)
 
 See the [Widgets Overview](widgets.md) for the full catalog, and the category chapters (5–9) for per-widget configuration.
 
@@ -89,7 +95,9 @@ Each widget's settings are documented in its own section (chapters 5–9).
 
 **Within a page:** drag a widget by its header. Drop zones appear between widgets; the destination column highlights. Drop to place.
 
-> **Figure 6 — Moving a widget between columns** *(placeholder: `../images/drag-drop.png`)*
+> **Figure 6 — Moving a widget between columns**
+
+![Moving a widget between columns](../images/drag-drop.png)
 
 **To another page:** click the widget's **Move to page** (arrow) control and pick the target page from the dropdown. DashHub moves the widget and switches to that page.
 

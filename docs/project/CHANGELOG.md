@@ -13,6 +13,7 @@ All notable changes to OSDuo DashHub will be documented in this file.
 
 ### Fixed
 - **Help viewer content now renders** — fixed the Markdown glob import (removed `import: 'default'`, which returned an empty `raw` and left the content area blank) and added `docs/` to the Docker frontend build context so the manual is bundled into the image
+- **Help viewer images now render** — converted the manual's textual image placeholders (`*(placeholder: \`../images/x.png\`)*`) into real Markdown image embeds so screenshots display inside the in-app viewer
 
 ### Changed
 - Regenerated `package-lock.json` to match v1.0.18 version (was stale at 1.0.14)

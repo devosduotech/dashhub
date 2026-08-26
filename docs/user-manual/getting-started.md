@@ -2,7 +2,9 @@
 
 This chapter covers accessing DashHub, understanding the interface, moving between pages, and using Edit Mode. Installation is covered in the [Deployment Guide](../deployment/README.md).
 
-> **Figure 1 — DashHub workspace** *(placeholder: `../images/dashboard.png`)*
+> **Figure 1 — DashHub workspace**
+
+![DashHub workspace](../images/dashboard.png)
 
 ## Accessing DashHub
 

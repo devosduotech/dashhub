@@ -2,7 +2,9 @@
 
 The SSH Terminal widget provides browser-based SSH access to your servers. One widget can hold many saved **connections**, and other widgets (System Info, Process List, Service Status, System Logs, Database Monitor) reuse those same connections.
 
-> **Figure 7 — Configuring an SSH connection** *(placeholder: `../images/ssh-settings.png`)*
+> **Figure 7 — Configuring an SSH connection**
+
+![Configuring an SSH connection](../images/ssh-settings.png)
 
 ## Before you configure SSH
 
@@ -60,7 +62,9 @@ Make sure:
 
 **Multiple sessions:** the **+** button in the terminal opens additional tabs within the widget; each tab is an independent session. Tabs can be renamed and closed.
 
-> **Figure 9 — SSH terminal session** *(placeholder: `../images/ssh-terminal.png`)*
+> **Figure 9 — SSH terminal session**
+
+![SSH terminal session](../images/ssh-terminal.png)
 
 ## Host keys
 

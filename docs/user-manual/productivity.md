@@ -32,7 +32,9 @@ Shows events from a CalDAV calendar (Nextcloud, and other CalDAV-compatible serv
 - **Month mode**: click any day to open the day panel; add events with the form (title required, start/end date-time) and delete events with the trash control
 - Credentials are stored server-side and resolved by widget ID — they survive page refreshes
 
-> **Figure 10 — Calendar month view with day panel** *(placeholder: `../images/calendar.png`)*
+> **Figure 10 — Calendar month view with day panel**
+
+![Calendar month view with day panel](../images/calendar.png)
 
 ---
 

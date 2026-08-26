@@ -2,7 +2,9 @@
 
 Eight widgets cover server and endpoint monitoring. All SSH-backed widgets share a **Connection** dropdown fed by your saved [SSH connections](ssh.md).
 
-> **Figure — Monitoring widgets in action** *(placeholder: `../images/monitoring.png`)*
+> **Figure — Monitoring widgets in action**
+
+![Monitoring widgets in action](../images/monitoring.png)
 
 ---
 
