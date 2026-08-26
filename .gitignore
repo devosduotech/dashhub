@@ -16,8 +16,18 @@ build/
 # Data directory (runtime configuration — includes SSH credentials)
 data/
 
-# Local project documentation (kept out of the repository)
-docs/
+# Local scratch documentation (user-facing docs subdirs ARE tracked — see exceptions)
+docs/*
+!docs/user-manual/
+!docs/deployment/
+!docs/images/
+!docs/SHOTLIST.md
+!docs/project/
+!docs/ARCHITECTURE.md
+!docs/widgets.md
+!docs/configuration.md
+!docs/deployment.md
+!docs/distribution.md
 
 # Logs
 logs/
