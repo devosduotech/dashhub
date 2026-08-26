@@ -79,6 +79,7 @@ Instead of replacing your existing tools, DashHub brings them together:
 
 ## Documentation
 
+- **In-app help** — click **Help** in the toolbar or visit `/help` while DashHub is running
 - [User Manual](docs/user-manual/README.md) — building and using your dashboard
 - [Installation & Deployment](docs/deployment/README.md) — Docker, Compose, upgrades, data
 - [Security](docs/project/SECURITY.md) — Phase 1 boundary and Phase 2 plan

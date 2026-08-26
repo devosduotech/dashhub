@@ -1,11 +1,13 @@
 <script setup lang="ts">
 import { ref } from 'vue'
+import { useRouter } from 'vue-router'
 import { useConfigStore } from '@/stores/config'
 import AppSettingsModal from './AppSettingsModal.vue'
 import AppIcon from '@/components/ui/AppIcon.vue'
 import AppLogo from '@/components/ui/AppLogo.vue'
 
 const store = useConfigStore()
+const router = useRouter()
 const showSettings = ref(false)
 </script>
 
@@ -33,6 +35,14 @@ const showSettings = ref(false)
       </span>
     </div>
     <div class="toolbar-right">
+      <button
+        class="toolbar-btn toolbar-btn-secondary"
+        @click="router.push('/help')"
+        title="Documentation"
+      >
+        <AppIcon name="book" :size="14" />
+        Help
+      </button>
       <button
         v-if="store.editMode"
         class="toolbar-btn toolbar-btn-secondary"

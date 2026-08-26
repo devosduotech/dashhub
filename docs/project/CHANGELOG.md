@@ -2,7 +2,22 @@
 
 All notable changes to OSDuo DashHub will be documented in this file.
 
-> Current version: **1.0.18** (2026-08-25)
+> Current version: **1.0.19** (2026-08-26)
+
+## [1.0.19] - 2026-08-26
+
+### Added
+- **In-app documentation viewer** — built-in user manual at `/help` with 12 chapters, themed sidebar navigation, prev/next chapter flow, and deep-linkable routes; renders Markdown from the docs repository with live image assets and cross-chapter link rewriting
+- **Help button in toolbar** — always-visible documentation shortcut in the top toolbar, accessible from any page
+- **Footer documentation link** — persistent documentation link in the application footer
+
+### Changed
+- Regenerated `package-lock.json` to match v1.0.18 version (was stale at 1.0.14)
+- Updated demo configuration (`docs/demo/conf.yml`) with live endpoints for screenshot capture
+- Fixed FAQ wording: "phone home" reworded to plain language ("send data to external servers / telemetry")
+- Fixed README accuracy: "no external dependency" replaced with precise phrasing about widget external connections
+- Added 10 user manual screenshots captured from live demo instance
+- Added deployment guide, backup/restore guide, and documentation wiring to README
 
 ## [1.0.18] - 2026-08-25
 

@@ -15,13 +15,13 @@ build
 .github
 .gitlab-ci.yml
 
-# Documentation (not needed in container)
+# Documentation (only user manual shipped in image for in-app help)
 *.md
 !README.md
 docs/
+!docs/user-manual/
+!docs/images/
 CHANGELOG.md
-MIGRATION.md
-STRUCTURE.md
 
 # Development files
 .env
