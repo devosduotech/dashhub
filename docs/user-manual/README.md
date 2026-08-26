@@ -12,7 +12,7 @@ Welcome to DashHub. This manual explains how to build, configure, and use your o
 
 DashHub brings server monitoring, SSH access, productivity tools, service health, bookmarks, and information feeds into a single web page that runs on your own infrastructure.
 
-It is **local-first**: there is no cloud account, no hosted service, and no external dependency. Everything — your layout, your widgets, your credentials — is stored on your own machine inside a single data directory.
+It is **local-first**: there is no cloud account and no hosted DashHub service. The application runs entirely on your own infrastructure. Individual widgets may connect to external services or endpoints when configured to do so (weather, RSS, package registries, etc.).
 
 ## Key concepts
 

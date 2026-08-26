@@ -125,7 +125,7 @@ Page: Home                     (4 columns)
 └── Quick Links (team resources)
 ```
 
-More layout ideas: [Recommended dashboard examples](#) in the [FAQ](faq.md#what-dashboard-layouts-do-you-recommend).
+More layout ideas: see the [Recommended dashboard layouts](faq.md#what-dashboard-layouts-do-you-recommend) in the FAQ.
 
 ---
 

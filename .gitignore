@@ -20,6 +20,7 @@ data/
 docs/*
 !docs/user-manual/
 !docs/deployment/
+!docs/demo/
 !docs/images/
 !docs/SHOTLIST.md
 !docs/project/

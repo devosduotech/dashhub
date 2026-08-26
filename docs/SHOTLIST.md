@@ -2,6 +2,27 @@
 
 Capture these figures from a **sanitized demo instance** — never from production OSDuo infrastructure (see "Sanitization checklist" below). Save files into `docs/images/` using the listed filenames; the manual's placeholders already reference them.
 
+## Demo instance setup
+
+A pre-built configuration is provided at [`conf.yml`](demo/conf.yml). It creates three pages (Dashboard, Server Operations, Content & Resources) with widgets covering every screenshot in the shotlist. All IPs use RFC 5737 documentation addresses and all hostnames use `.example.com`.
+
+**Quick start:**
+
+```bash
+# 1. Start a fresh DashHub instance (data/ must be empty)
+docker compose up -d
+
+# 2. Replace the generated config with the demo config
+cp docs/demo/conf.yml data/conf.yml
+
+# 3. Restart so the new config loads
+docker compose restart
+```
+
+Open DashHub and enable **Edit Mode**. The three page tabs (Dashboard, Server Operations, Content & Resources) are ready to capture.
+
+> **Note:** The SSH, Glances, and Database Monitor widgets point at `demo.example.com` / `192.0.2.100` which will not resolve on your network. They will show "connecting" or empty states — crop or capture them in that state for the shotlist, or connect them to a real lab box if available.
+
 ## Demo data to prepare
 
 | Instead of | Use |

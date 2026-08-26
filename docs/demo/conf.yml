@@ -1,0 +1,311 @@
+# DashHub Demo Configuration
+# Sanitized config for screenshot capture (docs/SHOTLIST.md)
+# Usage: copy to data/conf.yml on a fresh DashHub instance
+
+appConfig:
+  title: "DashHub Demo"
+  theme: dark-navy
+  language: en
+  iconSet: material
+  defaultPage: 0
+  fontSize: 14
+  footerText: ""
+  showFooter: false
+  logoUrl: ""
+
+sshConnections:
+  - id: demo-conn
+    name: Demo Server
+    host: demo.example.com
+    port: 22
+    username: demo
+    authType: password
+    group: "Demo"
+
+pages:
+  # ============================================================
+  # PAGE 1: Dashboard
+  # ============================================================
+  - name: "Dashboard"
+    icon: dashboard
+    items:
+      - id: w-clock
+        type: clock
+        title: "Clock"
+        config: {}
+
+      - id: w-weather
+        type: weather
+        title: "Weather"
+        config:
+          location: "London"
+          latitude: 51.5074
+          longitude: -0.1278
+          tempUnit: celsius
+          windUnit: kmh
+
+      - id: w-public-ip
+        type: public-ip
+        title: "Public IP"
+        config:
+          provider: ipinfo
+          useProxy: false
+          hideLocation: false
+
+      - id: w-quick-links-home
+        type: quick-links
+        title: "Quick Links"
+        config:
+          columns: 3
+          displayMode: grid
+          links:
+            - title: "Project Portal"
+              url: "https://portal.example.com"
+              icon: "folder"
+              description: "Project management"
+              target: newtab
+              category: "Work"
+            - title: "Monitoring"
+              url: "https://monitoring.example.com"
+              icon: "activity"
+              description: "Grafana dashboards"
+              target: newtab
+              category: "Work"
+            - title: "Documentation"
+              url: "https://docs.example.com"
+              icon: "book"
+              description: "Internal docs"
+              target: newtab
+              category: "Work"
+
+      - id: w-notes
+        type: notes
+        title: "Notes"
+        config:
+          sortBy: created
+          items:
+            - id: note-1
+              text: "Review deployment checklist before Friday release"
+              createdAt: "2026-08-20T10:00:00Z"
+              updatedAt: "2026-08-20T10:00:00Z"
+            - id: note-2
+              text: "Update SSL certificates on web01 and web02"
+              createdAt: "2026-08-18T14:30:00Z"
+              updatedAt: "2026-08-19T09:15:00Z"
+
+      - id: w-reminders
+        type: reminders
+        title: "Reminders"
+        config:
+          showCompleted: true
+          sortBy: created
+          items:
+            - id: rem-1
+              text: "Patch server security updates"
+              completed: false
+              createdAt: "2026-08-19T08:00:00Z"
+              updatedAt: "2026-08-19T08:00:00Z"
+            - id: rem-2
+              text: "Review backup logs"
+              completed: true
+              createdAt: "2026-08-17T11:00:00Z"
+              updatedAt: "2026-08-18T09:00:00Z"
+
+      - id: w-speedtest
+        type: speedtest
+        title: "Speedtest"
+        config:
+          server: cloudflare
+          testDuration: 10
+          parallelStreams: 4
+
+  # ============================================================
+  # PAGE 2: Server Operations
+  # ============================================================
+  - name: "Server Operations"
+    icon: server
+    items:
+      - id: w-ssh-main
+        type: ssh
+        title: "SSH Terminal"
+        config:
+          defaultShell: /bin/bash
+          theme: monokai
+          fontSize: 14
+          connections:
+            - id: demo-conn
+              name: "Demo Server"
+              host: "demo.example.com"
+              port: 22
+              username: "demo"
+              authType: password
+              group: "Demo"
+
+      - id: w-system-info
+        type: system-info
+        title: "System Info"
+        config:
+          connectionId: demo-conn
+          refreshInterval: 30
+          showCpu: true
+          showMemory: true
+          showDisk: true
+          showNetwork: true
+
+      - id: w-process-list
+        type: process-list
+        title: "Process List"
+        config:
+          connectionId: demo-conn
+          refreshInterval: 10
+          sortBy: cpu
+          sortOrder: desc
+          maxProcesses: 25
+          filterText: ""
+          viewMode: all
+
+      - id: w-service-status
+        type: service-status
+        title: "Service Status"
+        config:
+          connectionId: demo-conn
+          refreshInterval: 30
+          services:
+            - name: nginx
+            - name: sshd
+            - name: docker
+
+      - id: w-system-logs
+        type: system-logs
+        title: "System Logs"
+        config:
+          connectionId: demo-conn
+          service: ""
+          priority: info
+          lines: 100
+          refreshInterval: 30
+
+      - id: w-uptime
+        type: uptime
+        title: "Server Uptime"
+        config:
+          checkInterval: 300
+          endpoints:
+            - id: ep-web
+              name: "Web Portal"
+              url: "https://www.example.com"
+            - id: ep-api
+              name: "API Endpoint"
+              url: "https://httpbin.org/get"
+
+      - id: w-status-indicators
+        type: status-indicators
+        title: "Status Indicators"
+        config:
+          showLatency: true
+          showStatusCode: true
+          refreshInterval: 1800
+          endpoints:
+            - name: "Web Portal"
+              url: "https://www.example.com"
+              method: GET
+              expectedStatus: 200
+              timeout: 10
+              category: "Production"
+            - name: "API Health"
+              url: "https://httpbin.org/status/200"
+              method: GET
+              expectedStatus: 200
+              timeout: 10
+              category: "Production"
+
+      - id: w-glances
+        type: glances
+        title: "Glances Server"
+        config:
+          url: "http://192.0.2.100:61208"
+          displayMode: embedded
+          height: 400
+          fullWidth: true
+
+      - id: w-database-monitor
+        type: database-monitor
+        title: "Database Monitor"
+        config:
+          connectionId: demo-conn
+          dbHost: "127.0.0.1"
+          dbPort: 3306
+          dbUser: demo
+          refreshInterval: 30
+
+  # ============================================================
+  # PAGE 3: Content & Resources
+  # ============================================================
+  - name: "Content & Resources"
+    icon: rss
+    items:
+      - id: w-rss
+        type: rss
+        title: "Tech News"
+        config:
+          itemsPerFeed: 5
+          showThumbnails: true
+          cacheTime: 15
+          feeds:
+            - url: "https://hnrss.org/frontpage"
+              title: "Hacker News"
+              icon: "hacker-news"
+              group: "Tech"
+            - url: "https://feeds.bbci.co.uk/news/technology/rss.xml"
+              title: "BBC Tech"
+              icon: "news"
+              group: "Tech"
+
+      - id: w-youtube
+        type: youtube
+        title: "YouTube"
+        config:
+          videosPerChannel: 3
+          displayMode: grid
+          thumbnailSize: medium
+          cacheTime: 60
+          channels:
+            - id: "UCBJycsmduvYEL83R_U4JriQ"
+              name: "Marques Brownlee"
+            - id: "UCsBjURrPoezykLs9EqgamOA"
+              name: "Fireship"
+
+      - id: w-latest-versions
+        type: latest-versions
+        title: "Latest Versions"
+        config:
+          items:
+            - name: "Node.js"
+              source: npm
+              identifier: "@types/node"
+            - name: "Python"
+              source: pypi
+              identifier: cpython
+
+      - id: w-iframe
+        type: iframe
+        title: "Embedded Page"
+        config:
+          url: "https://www.example.com"
+          height: 400
+          width: "100%"
+          fullWidth: true
+          allowFullscreen: true
+
+      - id: w-calendar
+        type: calendar
+        title: "Calendar"
+        config:
+          serverUrl: ""
+          username: ""
+          password: ""
+          calendarUrl: ""
+          displayName: ""
+          displayMode: month
+          eventCount: 10
+          refreshInterval: 15

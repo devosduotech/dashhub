@@ -5,8 +5,8 @@
 **Is DashHub free?**
 Yes — open source under the MIT license.
 
-**Does DashHub phone home?**
-No. It is local-first: configuration stays in your `data/` directory. Individual widgets query the services you configure (weather, RSS, public-IP lookup, package registries) — nothing else leaves your network.
+**Does DashHub send data to external servers (telemetry)?**
+No. DashHub does not phone home and sends no usage data to any vendor. It is local-first: configuration stays in your `data/` directory. Individual widgets query the services you configure (weather, RSS, public-IP lookup, package registries) — nothing else leaves your network.
 
 **Can several people use the same dashboard?**
 DashHub v1.x is designed for a single user on a local machine or a trusted private LAN. There is no authentication yet — anyone who can reach the port can view and change the dashboard. Multi-user access with authentication is the headline Phase 2 feature; until then, do not expose DashHub to the public internet.
