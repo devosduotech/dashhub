@@ -23,6 +23,7 @@ All notable changes to OSDuo DashHub will be documented in this file.
 - Fixed README accuracy: "no external dependency" replaced with precise phrasing about widget external connections
 - Added 10 user manual screenshots captured from live demo instance
 - Added deployment guide, backup/restore guide, and documentation wiring to README
+- Corrected project documentation for 1.0.19: removed phantom widgets (GitHub Trending, Docker Compose Monitor) and phantom API endpoints from STATUS.md; fixed README version references and widget inventory; added release/distribution guide
 
 ## [1.0.18] - 2026-08-25
 

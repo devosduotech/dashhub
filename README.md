@@ -51,7 +51,6 @@ Instead of replacing your existing tools, DashHub brings them together:
 - **Service Status** — Monitor systemd services through SSH
 - **System Logs** — View journalctl logs through SSH
 - **Database Monitor** — Monitor MySQL/MariaDB databases through SSH
-- **Docker Compose Monitor** — Service status with inline start/stop/restart controls
 - **Server Monitoring** — Real-time CPU, memory, disk, and network metrics using Glances
 - **Server Uptime** — Monitor endpoint availability with history
 - **Status Indicators** — Endpoint health and latency indicators
@@ -95,7 +94,7 @@ DashHub is designed to run on your own infrastructure.
 - No hosted DashHub account required
 - Persistent local configuration
 - Docker and Docker Compose
-- Linux AMD64 images
+- linux/amd64 + linux/arm64 images
 - GitHub Container Registry
 - Suitable for personal and trusted private-LAN environments
 
@@ -108,7 +107,7 @@ DashHub is designed to run on your own infrastructure.
 ```bash
 mkdir dashhub && cd dashhub
 mkdir data
-curl -O https://raw.githubusercontent.com/devosduotech/dashhub/v1.0.18/docker-compose.yml
+curl -O https://raw.githubusercontent.com/devosduotech/dashhub/v1.0.19/docker-compose.yml
 docker compose up -d
 ```
 
@@ -122,7 +121,7 @@ docker run -d \
   -p 48215:80 \
   -v "$PWD/data":/app/data \
   --restart unless-stopped \
-  ghcr.io/devosduotech/dashhub:1.0.18
+  ghcr.io/devosduotech/dashhub:1.0.19
 ```
 
 ### Build from Source
@@ -161,7 +160,7 @@ DashHub is configured through the web interface:
 
 | Category | Widgets |
 |----------|---------|
-| Infrastructure | SSH, Glances, System Info, Process List, Service Status, System Logs, Database Monitor, Docker Compose |
+| Infrastructure | SSH, Glances, System Info, Process List, Service Status, System Logs, Database Monitor, Latest Versions |
 | Monitoring | Uptime, Status Indicators, Glances |
 | Productivity | Calendar, Notes, Reminders, Clock |
 | Network | Public IP, Speedtest, Weather, Latest Versions |
@@ -187,14 +186,13 @@ Images are published through GitHub Container Registry:
 
 | Tag | Description |
 |-----|-------------|
-| `1.0.18` | Current release |
+| `1.0.19` | Current release |
 | `latest` | Latest stable release |
-| `dev` | Development build |
 
 Pull the current release:
 
 ```bash
-docker pull ghcr.io/devosduotech/dashhub:1.0.18
+docker pull ghcr.io/devosduotech/dashhub:1.0.19
 ```
 
 View [Docker Images on GitHub](https://github.com/devosduotech/dashhub/pkgs/container/dashhub)

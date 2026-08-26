@@ -24,11 +24,16 @@ dashhub/
 │   ├── known_hosts.json  # Trusted SSH host fingerprints
 │   └── uploads/          # Uploaded icons/images
 │
-├── docker/               # Docker-specific files
-│   ├── entrypoint.sh     # Container startup script
-│   └── nginx.conf        # Nginx configuration
-│
-├── src/                  # Frontend source code
+ ├── docker/               # Docker-specific files
+ │   ├── entrypoint.sh     # Container startup script
+ │   └── nginx.conf        # Nginx configuration
+ ├── docs/                 # Documentation (bundled into image for in-app help)
+ │   ├── user-manual/      # 12-chapter end-user manual (rendered at /help)
+ │   ├── deployment/       # Install, upgrade, backup/restore guides
+ │   ├── images/           # Manual screenshots (bundled as image assets)
+ │   ├── demo/             # Sanitized demo configuration
+ │   └── project/          # STATUS, CHANGELOG, SECURITY, PHASE2, STRUCTURE, MIGRATION
+ ├── src/                  # Frontend source code
 │   ├── components/
 │   ├── views/
 │   ├── stores/
@@ -181,7 +186,7 @@ docker compose -f docker-compose.yml -f docker-compose.dev.yml up -d --build
 | `HOST_PORT` | `48215` | Host port mapping (released image container) |
 | `HOST_PORT_DEV` | `48216` | Host port mapping (dev container) |
 
-See [distribution.md](../distribution.md) for the release/CI pipeline reference.
+See [distribution.md](../deployment/distribution.md) for the release/CI pipeline reference.
 
 ## Migration from Old Structure
 
