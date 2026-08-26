@@ -7,6 +7,11 @@ const store = useConfigStore()
 const router = useRouter()
 const footerText = computed(() => store.appConfig.footerText ?? '© 2026 OSDuo Tech, Bengaluru')
 const showFooter = computed(() => store.appConfig.showFooter ?? true)
+
+function openHelp() {
+  const href = router.resolve('/help').href
+  window.open(href, '_blank', 'noopener,noreferrer')
+}
 </script>
 
 <template>
@@ -14,7 +19,7 @@ const showFooter = computed(() => store.appConfig.showFooter ?? true)
     <div class="footer-content">
       <span class="footer-text">{{ footerText }}</span>
       <span class="footer-sep">·</span>
-      <button class="footer-link" @click="router.push('/help')">Documentation</button>
+      <button class="footer-link" @click="openHelp">Documentation</button>
     </div>
   </footer>
 </template>

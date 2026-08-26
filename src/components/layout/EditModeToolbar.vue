@@ -9,6 +9,11 @@ import AppLogo from '@/components/ui/AppLogo.vue'
 const store = useConfigStore()
 const router = useRouter()
 const showSettings = ref(false)
+
+function openHelp() {
+  const href = router.resolve('/help').href
+  window.open(href, '_blank', 'noopener,noreferrer')
+}
 </script>
 
 <template>
@@ -37,7 +42,7 @@ const showSettings = ref(false)
     <div class="toolbar-right">
       <button
         class="toolbar-btn toolbar-btn-secondary"
-        @click="router.push('/help')"
+        @click="openHelp"
         title="Documentation"
       >
         <AppIcon name="book" :size="14" />

@@ -8,8 +8,11 @@ All notable changes to OSDuo DashHub will be documented in this file.
 
 ### Added
 - **In-app documentation viewer** — built-in user manual at `/help` with 12 chapters, themed sidebar navigation, prev/next chapter flow, and deep-linkable routes; renders Markdown from the docs repository with live image assets and cross-chapter link rewriting
-- **Help button in toolbar** — always-visible documentation shortcut in the top toolbar, accessible from any page
-- **Footer documentation link** — persistent documentation link in the application footer
+- **Help button in toolbar** — always-visible documentation shortcut in the top toolbar, accessible from any page (opens in a new browser tab)
+- **Footer documentation link** — persistent documentation link in the application footer (opens in a new browser tab)
+
+### Fixed
+- **Help viewer content now renders** — fixed the Markdown glob import (removed `import: 'default'`, which returned an empty `raw` and left the content area blank) and added `docs/` to the Docker frontend build context so the manual is bundled into the image
 
 ### Changed
 - Regenerated `package-lock.json` to match v1.0.18 version (was stale at 1.0.14)

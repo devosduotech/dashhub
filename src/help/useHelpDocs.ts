@@ -14,11 +14,11 @@ interface ImageModule {
 
 const mdModules = import.meta.glob<{
   default: string
-}>('../../docs/user-manual/*.md', { eager: true, query: '?raw', import: 'default' })
+}>('../../docs/user-manual/*.md', { eager: true, query: '?raw' })
 
 const imageModules = import.meta.glob<{ default: string }>(
   '../../docs/images/*.png',
-  { eager: true, query: '?url', import: 'default' }
+  { eager: true, query: '?url' }
 )
 
 const imageMap: Record<string, string> = {}
