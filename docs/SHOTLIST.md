@@ -4,7 +4,7 @@ Capture these figures from a **sanitized demo instance** — never from producti
 
 ## Demo instance setup
 
-A pre-built configuration is provided at [`conf.yml`](demo/conf.yml). It creates three pages (Dashboard, Server Operations, Content & Resources) with widgets covering every screenshot in the shotlist. All IPs use RFC 5737 documentation addresses and all hostnames use `.example.com`.
+A pre-built configuration is provided at [`conf.yml`](demo/conf.yml). It creates three pages (Dashboard, Server Operations, Content & Resources) with widgets covering every screenshot in the shotlist. SSH connects to your local machine; uptime/status endpoints use live public URLs.
 
 **Quick start:**
 
@@ -19,9 +19,35 @@ cp docs/demo/conf.yml data/conf.yml
 docker compose restart
 ```
 
-Open DashHub and enable **Edit Mode**. The three page tabs (Dashboard, Server Operations, Content & Resources) are ready to capture.
+### Prerequisites for live data
 
-> **Note:** The SSH, Glances, and Database Monitor widgets point at `demo.example.com` / `192.0.2.100` which will not resolve on your network. They will show "connecting" or empty states — crop or capture them in that state for the shotlist, or connect them to a real lab box if available.
+The demo config points SSH at `localhost` (your machine). For the monitoring widgets to show real data:
+
+| Requirement | Why | How to check |
+|-------------|-----|--------------|
+| SSH enabled on localhost | System Info, Process List, Service Status, System Logs, SSH Terminal | `ssh localhost echo ok` |
+| Your SSH key in `~/.ssh/authorized_keys` | Auth type is `key` (password auth not used in demo) | `ssh localhost echo ok` should work without password |
+| Glances web server (optional) | Glances iframe widget | `pip install glances[web] && glances -w` on port 61208 |
+
+If SSH is not available, the SSH-backed widgets show a "connecting" state — crop or capture them as-is for the shotlist.
+
+### Pre-configured live endpoints
+
+These work out of the box with no setup:
+
+| Widget | Endpoint | Status |
+|--------|----------|--------|
+| Server Uptime | `https://www.example.com` | Returns 200 ✓ |
+| Server Uptime | `https://httpbin.org/get` | Returns 200 ✓ |
+| Status Indicators | `https://www.example.com` | Returns 200 ✓ |
+| Status Indicators | `https://httpbin.org/status/200` | Returns 200 ✓ |
+| IFrame | `https://www.example.com` | Embeds ✓ |
+| RSS | Hacker News + BBC Tech | Live feeds ✓ |
+| YouTube | MKBHD + Fireship | Live channels ✓ |
+| Weather | London (Open-Meteo) | Live data ✓ |
+| Public IP | ipinfo.io | Live data ✓ |
+| Speedtest | Cloudflare | Live test ✓ |
+| Latest Versions | npm + PyPI | Live lookups ✓ |
 
 ## Demo data to prepare
 
