@@ -42,6 +42,21 @@ const CHAPTER_META: Array<{ id: string; title: string; icon: string }> = [
   { id: 'faq', title: 'FAQ', icon: 'help' }
 ]
 
+const CHAPTER_IDS = new Set(CHAPTER_META.map((m) => m.id))
+
+const REPO_BASE = 'https://github.com/devosduotech/dashhub/blob/v1.0.19/'
+
+function normalizeRepoPath(rel: string): string {
+  const parts = ('docs/user-manual/' + rel).split('/')
+  const stack: string[] = []
+  for (const part of parts) {
+    if (part === '' || part === '.') continue
+    if (part === '..') stack.pop()
+    else stack.push(part)
+  }
+  return stack.join('/')
+}
+
 marked.setOptions({ breaks: true, gfm: true })
 
 export function getChapters(): HelpChapter[] {
@@ -55,23 +70,31 @@ export function getChapters(): HelpChapter[] {
   })
 }
 
-function rewriteLinks(html: string): string {
-  return html
-    .replace(/\.\.\/images\/([^)"']+)/g, (_, name: string) => {
-      return imageMap[`../images/${name}`] || `../images/${name}`
-    })
-    .replace(/href="([a-z0-9-]+\.md)(#[^"]*)?"/g, (_, file: string, hash: string) => {
-      const chapterId = file.replace('.md', '')
-      return `href="/help/${chapterId}${hash || ''}"`
-    })
-    .replace(/href="#/g, 'href="#')
+export function rewriteLinks(html: string): string {
+  return (
+    html
+      .replace(/\.\.\/images\/([^)"']+)/g, (_, name: string) => {
+        return imageMap[`../images/${name}`] || `../images/${name}`
+      })
+      .replace(/href="([^"]+\.md)(#[^"]*)?"/g, (_, file: string, hash: string) => {
+        const clean = file.replace(/^\.\//, '')
+        if (!clean.includes('/')) {
+          const base = clean.replace('.md', '')
+          if (CHAPTER_IDS.has(base)) {
+            return `href="/help/${base}${hash || ''}"`
+          }
+        }
+        const repoPath = normalizeRepoPath(clean)
+        return `href="${REPO_BASE}${repoPath}${hash || ''}" target="_blank" rel="noopener noreferrer"`
+      })
+  )
 }
 
 export function renderMarkdown(raw: string): string {
   const html = marked.parse(raw) as string
   const safe = DOMPurify.sanitize(html, {
     ADD_TAGS: ['img'],
-    ADD_ATTR: ['src', 'alt', 'title']
+    ADD_ATTR: ['src', 'alt', 'title', 'target', 'rel']
   })
   return rewriteLinks(safe)
 }
