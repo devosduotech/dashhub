@@ -96,6 +96,7 @@ function probeFingerprint(connConfig, cb) {
   const ssh = new Client()
   let captured = null
   let done = false
+  let lastError = 'Connection to target failed before a host key could be read.'
   const finish = (result) => {
     if (done) return
     done = true
@@ -105,12 +106,13 @@ function probeFingerprint(connConfig, cb) {
     } catch (e) { /* ignore */ }
     cb(result)
   }
-  const timer = setTimeout(() => finish(null), 15000)
-  ssh.on('error', () => {
-    if (captured) finish({ fingerprint: fingerprintOf(captured), key: captured })
-    else finish(null)
+  const timer = setTimeout(() => finish({ ok: false, error: lastError + ' (timed out)' }), 15000)
+  ssh.on('error', (err) => {
+    lastError = err.message || lastError
+    if (captured) finish({ ok: true, fingerprint: fingerprintOf(captured), key: captured })
+    else finish({ ok: false, error: lastError })
   })
-  ssh.on('ready', () => finish(captured ? { fingerprint: fingerprintOf(captured), key: captured } : null))
+  ssh.on('ready', () => finish(captured ? { ok: true, fingerprint: fingerprintOf(captured), key: captured } : { ok: false, error: lastError }))
   ssh.connect(buildSshConfig(connConfig, (key) => {
     captured = key
     return false
@@ -205,8 +207,9 @@ function setupSshBridge(server) {
         return
       }
       probeFingerprint(connConfig, (result) => {
-        if (!result) {
-          send({ type: 'error', message: 'Unable to obtain the host key from the target.' })
+        if (!result || !result.ok) {
+          const reason = (result && result.error) ? result.error : 'Unable to obtain the host key from the target.'
+          send({ type: 'error', message: 'Could not reach the SSH target — ' + reason })
           ws.close()
           return
         }

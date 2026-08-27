@@ -88,6 +88,11 @@ services:
         max-size: "10m"
         max-file: "3"
 
+    # Lets the SSH widget reach the host machine as `host.docker.internal`
+    # (inside the container, 127.0.0.1 is the container itself).
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+
     # Network
     networks:
       - dashhub-network
