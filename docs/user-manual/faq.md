@@ -49,6 +49,9 @@ The server presented a different host key — typical after a rebuild. Verify th
 **Can I use a YubiKey / hardware key?**
 If your SSH agent can expose it where the DashHub container runs, use **Agent** authentication; otherwise export a standard private key and use **Private Key** auth.
 
+**How do I open a terminal on the machine that runs DashHub?**
+Use **`host.docker.internal`** as the SSH Host (not `127.0.0.1`, which is the container itself in Docker). The shipped `docker-compose.yml` maps that name to your host, and it stays valid even as your DHCP-assigned LAN/WiFi IP changes — so you don't have to keep updating the connection. See [Connecting to the machine that runs DashHub](ssh.md#connecting-to-the-machine-that-runs-dashhub).
+
 ## Operations
 
 **How do I upgrade?**

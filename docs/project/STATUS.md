@@ -173,6 +173,7 @@ All routes are implemented in `server/api/server.js` (25 HTTP routes + 1 WebSock
 | CI/CD pipeline | Implemented | GitHub Actions: gate → buildx multi-arch → smoke test → GHCR push |
 | Multi-arch images | Implemented | linux/amd64 + linux/arm64 via buildx |
 | Docker image registry | Implemented | `ghcr.io/devosduotech/dashhub` (`1.0.19` + `latest`) |
+| Host SSH access from container | Implemented | `extra_hosts: host.docker.internal:host-gateway` in compose; use `host.docker.internal` (not `127.0.0.1`) as the SSH Host — stable across DHCP IP changes |
 | Version sync script | Implemented | `scripts/sync-version.sh` syncs version to README + compose |
 | Documentation | Implemented | In-app help (`/help`) + `docs/user-manual/`, `docs/deployment/`, `docs/project/` |
 

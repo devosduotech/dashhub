@@ -15,6 +15,17 @@ Make sure:
 - You know the SSH port (22 unless changed)
 - You have a valid username and one of: a password, a private key, or an SSH agent
 
+### Connecting to the machine that runs DashHub
+
+If you want terminal access to the **same host that runs DashHub**, the **Host** value depends on how DashHub is deployed:
+
+- **Docker (shipped compose):** use **`host.docker.internal`**, **not** `127.0.0.1`. Inside the container, `127.0.0.1` is the container itself, which has no SSH server — that is why a connection to `127.0.0.1:22` fails with a host-key / unreachable error. The shipped `docker-compose.yml` already maps `host.docker.internal` to your host via `extra_hosts: host.docker.internal:host-gateway`, so the name is stable **even when your LAN/WiFi IP changes under DHCP**. Recreate the container once (`docker compose up -d`) to apply that setting.
+- **Native / `npm run dev` on the host:** use `127.0.0.1` (or `localhost`) — that reaches the host directly.
+
+> **DHCP-friendly:** `host.docker.internal` resolves through Docker's bridge rather than your network IP, so you never have to update the connection when the machine's address changes.
+
+The host must be running an SSH server (e.g. `sudo apt install openssh-server && sudo systemctl enable --now ssh`).
+
 ## Adding a connection
 
 1. Enable **Edit Mode** and open the SSH widget's **Settings**.

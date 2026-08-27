@@ -13,6 +13,7 @@ Quick matrix first, details below. Container-level commands assume the default c
 | SSH connection fails | Network, credentials, or wrong port | Verify host/port/username; test from another machine; check the auth type matches what you configured |
 | SSH connection fails with a host-key error | Server's key changed (rebuild/re-IP) | Confirm the change is genuine, then remove that host's entry from `data/known_hosts.json` and reconnect (see [SSH](ssh.md#host-keys)) |
 | SSH widget shows "Connecting…" forever | Server unreachable or auth rejected | Check server reachability; verify username/auth; look at `docker compose logs` for the SSH bridge error |
+| SSH to `127.0.0.1:22` fails ("Unable to obtain the host key" / unreachable) | Container loopback, not the host | If DashHub runs in Docker, `127.0.0.1` is the container. Use **`host.docker.internal`** as the Host instead (see [SSH](ssh.md#connecting-to-the-machine-that-runs-dashhub)); ensure sshd is running on the host |
 | Glances widget blank | Glances URL unreachable **from your browser** | Open the Glances URL directly in a tab; confirm `glances -w` is running; check firewall |
 | Server Uptime shows gray segments | Page was closed (checks run only while the page is open) | Normal — keep the page open for continuous checks |
 | Status Indicators show everything red | DashHub server cannot reach the endpoints | Test the URLs from the server; check expected status codes |
