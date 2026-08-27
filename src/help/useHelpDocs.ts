@@ -44,7 +44,7 @@ const CHAPTER_META: Array<{ id: string; title: string; icon: string }> = [
 
 const CHAPTER_IDS = new Set(CHAPTER_META.map((m) => m.id))
 
-const REPO_BASE = 'https://github.com/devosduotech/dashhub/blob/v1.0.19/'
+const REPO_BASE = 'https://github.com/devosduotech/dashhub/blob/v1.0.20/'
 
 function normalizeRepoPath(rel: string): string {
   const parts = ('docs/user-manual/' + rel).split('/')

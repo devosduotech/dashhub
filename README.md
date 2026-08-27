@@ -107,7 +107,7 @@ DashHub is designed to run on your own infrastructure.
 ```bash
 mkdir dashhub && cd dashhub
 mkdir data
-curl -O https://raw.githubusercontent.com/devosduotech/dashhub/v1.0.19/docker-compose.yml
+curl -O https://raw.githubusercontent.com/devosduotech/dashhub/v1.0.20/docker-compose.yml
 docker compose up -d
 ```
 
@@ -121,7 +121,7 @@ docker run -d \
   -p 48215:80 \
   -v "$PWD/data":/app/data \
   --restart unless-stopped \
-  ghcr.io/devosduotech/dashhub:1.0.19
+  ghcr.io/devosduotech/dashhub:1.0.20
 ```
 
 ### Build from Source
@@ -186,13 +186,13 @@ Images are published through GitHub Container Registry:
 
 | Tag | Description |
 |-----|-------------|
-| `1.0.19` | Current release |
+| `1.0.20` | Current release |
 | `latest` | Latest stable release |
 
 Pull the current release:
 
 ```bash
-docker pull ghcr.io/devosduotech/dashhub:1.0.19
+docker pull ghcr.io/devosduotech/dashhub:1.0.20
 ```
 
 View [Docker Images on GitHub](https://github.com/devosduotech/dashhub/pkgs/container/dashhub)

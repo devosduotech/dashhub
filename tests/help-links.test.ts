@@ -14,13 +14,13 @@ describe('help docs link rewriting', () => {
 
   it('routes external .md docs (deployment guide) to GitHub in a new tab', () => {
     const out = rewriteLinks('<a href="../deployment/README.md">x</a>')
-    expect(out).toContain('https://github.com/devosduotech/dashhub/blob/v1.0.19/docs/deployment/README.md')
+    expect(out).toContain('https://github.com/devosduotech/dashhub/blob/v1.0.20/docs/deployment/README.md')
     expect(out).toContain('target="_blank"')
   })
 
   it('routes SECURITY.md (with different relative depth) to GitHub', () => {
     const out = rewriteLinks('<a href="../../docs/project/SECURITY.md">x</a>')
-    expect(out).toContain('https://github.com/devosduotech/dashhub/blob/v1.0.19/docs/project/SECURITY.md')
+    expect(out).toContain('https://github.com/devosduotech/dashhub/blob/v1.0.20/docs/project/SECURITY.md')
     expect(out).toContain('target="_blank"')
   })
 

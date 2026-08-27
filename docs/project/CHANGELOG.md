@@ -2,7 +2,16 @@
 
 All notable changes to OSDuo DashHub will be documented in this file.
 
-> Current version: **1.0.19** (2026-08-26)
+> Current version: **1.0.20** (2026-08-27)
+
+## [1.0.20] - 2026-08-27
+
+### Added
+- SSH Terminal and SSH-backed widgets can reach the host that runs DashHub using the stable name `host.docker.internal`, so the connection keeps working when the host's LAN/WiFi IP changes under DHCP.
+
+### Fixed
+- The SSH host-key probe now reports the actual connection failure (refused/timeout) instead of the misleading "Unable to obtain the host key from the target." when a target is unreachable.
+- Documentation: added host-access guidance and clarified container loopback behavior.
 
 ## [1.0.19] - 2026-08-26
 

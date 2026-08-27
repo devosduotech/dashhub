@@ -3,7 +3,7 @@
 > **Purpose:** Track exactly what is implemented, partially implemented, or planned.
 > This document is the source of truth for reconciling the Project Report against the codebase.
 >
-> Last updated: 2026-08-26 | Version: **1.0.19**
+> Last updated: 2026-08-27 | Version: **1.0.20**
 >
 > Audited directly against the codebase (widget registry, server routes, tests) — phantom entries previously listed here (GitHub Trending widget, Docker Compose Monitor widget, `/api/power`, `/api/database/stats`, `/api/mongodb/demo`, `/api/config/backups`) were **not present in the code** and have been removed.
 
@@ -106,7 +106,7 @@
 
 ## Deployment Boundary
 
-> **DashHub v1.0.19 — Local-First Release.** Intended for a single user on a
+> **DashHub v1.0.20 — Local-First Release.** Intended for a single user on a
 > local machine or a trusted private LAN. It is **not** ready for public Internet exposure
 > or shared multi-user hosting until Phase 2 (authentication, RBAC, encrypted credential
 > vault, CSRF/CORS hardening, audit logging). See [SECURITY.md](./SECURITY.md).
@@ -172,7 +172,7 @@ All routes are implemented in `server/api/server.js` (25 HTTP routes + 1 WebSock
 | Read-only rootfs compatible | Implemented | nginx temp paths in `/tmp`; CI smoke test runs `--read-only` |
 | CI/CD pipeline | Implemented | GitHub Actions: gate → buildx multi-arch → smoke test → GHCR push |
 | Multi-arch images | Implemented | linux/amd64 + linux/arm64 via buildx |
-| Docker image registry | Implemented | `ghcr.io/devosduotech/dashhub` (`1.0.19` + `latest`) |
+| Docker image registry | Implemented | `ghcr.io/devosduotech/dashhub` (`1.0.20` + `latest`) |
 | Host SSH access from container | Implemented | `extra_hosts: host.docker.internal:host-gateway` in compose; use `host.docker.internal` (not `127.0.0.1`) as the SSH Host — stable across DHCP IP changes |
 | Version sync script | Implemented | `scripts/sync-version.sh` syncs version to README + compose |
 | Documentation | Implemented | In-app help (`/help`) + `docs/user-manual/`, `docs/deployment/`, `docs/project/` |

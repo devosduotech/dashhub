@@ -95,7 +95,7 @@ onMounted(() => {
           </button>
         </nav>
 
-        <div class="help-version">DashHub v1.0.19 — User Manual</div>
+        <div class="help-version">DashHub v1.0.20 — User Manual</div>
       </main>
     </div>
   </div>
