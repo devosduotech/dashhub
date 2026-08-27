@@ -45,7 +45,9 @@ const activeCount = computed(() => services.value.filter(s => s.active).length)
 
 onMounted(() => {
   loadData()
-  refreshTimer = setInterval(loadData, refreshInterval.value)
+  if (refreshInterval.value > 0) {
+    refreshTimer = setInterval(loadData, refreshInterval.value)
+  }
 })
 
 onUnmounted(() => {

@@ -2,7 +2,13 @@
 
 All notable changes to OSDuo DashHub will be documented in this file.
 
-> Current version: **1.0.20** (2026-08-27)
+> Current version: **1.0.21** (2026-08-27)
+
+## [1.0.21] - 2026-08-27
+
+### Changed
+- Standardized auto-refresh intervals across all SSH-polling widgets (Process List, System Info, Service Status, Database Monitor, System Logs). New options: **Manual** (no auto-refresh), 30 seconds, 60 seconds, 5 minutes, 15 minutes, 30 minutes. The aggressive 5s/10s defaults are removed to reduce unnecessary SSH load on monitored hosts. Default is now 60 seconds.
+- Manual mode loads data once on mount; refresh on demand via each widget's existing Refresh button.
 
 ## [1.0.20] - 2026-08-27
 

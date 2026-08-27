@@ -130,10 +130,12 @@ function removeProcess(index: number) {
       <div class="form-group form-group-half">
         <label class="form-label">Auto-Refresh</label>
         <select class="form-select" :value="refreshInterval" @change="onRefreshIntervalChange(($event.target as HTMLSelectElement).value)">
-          <option :value="5">Every 5 seconds</option>
-          <option :value="10">Every 10 seconds</option>
+          <option :value="0">Manual</option>
           <option :value="30">Every 30 seconds</option>
           <option :value="60">Every 60 seconds</option>
+          <option :value="300">Every 5 minutes</option>
+          <option :value="900">Every 15 minutes</option>
+          <option :value="1800">Every 30 minutes</option>
         </select>
       </div>
     </div>

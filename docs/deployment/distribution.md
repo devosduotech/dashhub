@@ -12,7 +12,7 @@ ghcr.io/devosduotech/dashhub
 
 | Tag | Meaning |
 | --- | --- |
-| `1.0.20` (current) | Pinned release tag |
+| `1.0.21` (current) | Pinned release tag |
 | `latest` | Latest stable release |
 | `dev` | **Not published.** Only `v*` tags and `workflow_dispatch` builds push images. |
 
@@ -29,7 +29,7 @@ Concurrency is scoped to `docker-${{ github.ref }}` with `cancel-in-progress: tr
 
 ## Versioning
 
-The version lives in `package.json` (`1.0.20`). After bumping it, run:
+The version lives in `package.json` (`1.0.21`). After bumping it, run:
 
 ```bash
 bash scripts/sync-version.sh
@@ -40,15 +40,15 @@ This updates the version in `README.md` (Docker Images table) and `docker-compos
 ## Cutting a Release
 
 1. Commit the change and push to `develop` and `v1` (kept in sync).
-2. Tag the release commit: `git tag -a v1.0.20 -m "..."` and `git push origin v1.0.20`.
-3. CI builds and pushes `ghcr.io/devosduotech/dashhub:1.0.20` + `:latest`.
+2. Tag the release commit: `git tag -a v1.0.21 -m "..."` and `git push origin v1.0.21`.
+3. CI builds and pushes `ghcr.io/devosduotech/dashhub:1.0.21` + `:latest`.
 4. Create/restore the GitHub Release for the tag (deleting and re-pushing a tag flips the release to draft — restore it afterward with name, body, and `draft: false`).
 
 ## Local Build (manual)
 
 ```bash
 docker buildx build --platform linux/amd64,linux/arm64 \
-  -t ghcr.io/devosduotech/dashhub:1.0.20 \
+  -t ghcr.io/devosduotech/dashhub:1.0.21 \
   -t ghcr.io/devosduotech/dashhub:latest \
   --push .
 ```

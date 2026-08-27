@@ -184,7 +184,7 @@ export const widgetRegistry: Record<WidgetType, WidgetDefinition> = {
     category: 'infrastructure',
     component: () => import('@/components/widgets/ProcessListWidget.vue'),
     settingsForm: () => import('@/components/widgets/ProcessListSettingsForm.vue'),
-    defaultConfig: () => ({ connectionId: '', refreshInterval: 10, sortBy: 'cpu', sortOrder: 'desc', maxProcesses: 25, filterText: '', viewMode: 'all', selectedProcesses: [] })
+    defaultConfig: () => ({ connectionId: '', refreshInterval: 60, sortBy: 'cpu', sortOrder: 'desc', maxProcesses: 25, filterText: '', viewMode: 'all', selectedProcesses: [] })
   },
   'system-info': {
     type: 'system-info',
@@ -194,7 +194,7 @@ export const widgetRegistry: Record<WidgetType, WidgetDefinition> = {
     category: 'infrastructure',
     component: () => import('@/components/widgets/SystemInfoWidget.vue'),
     settingsForm: () => import('@/components/widgets/SystemInfoSettingsForm.vue'),
-    defaultConfig: () => ({ connectionId: '', refreshInterval: 30, showCpu: true, showMemory: true, showDisk: true, showNetwork: true })
+    defaultConfig: () => ({ connectionId: '', refreshInterval: 60, showCpu: true, showMemory: true, showDisk: true, showNetwork: true })
   },
   'service-status': {
     type: 'service-status',
@@ -204,7 +204,7 @@ export const widgetRegistry: Record<WidgetType, WidgetDefinition> = {
     category: 'infrastructure',
     component: () => import('@/components/widgets/ServiceStatusWidget.vue'),
     settingsForm: () => import('@/components/widgets/ServiceStatusSettingsForm.vue'),
-    defaultConfig: () => ({ connectionId: '', services: [], refreshInterval: 30 })
+    defaultConfig: () => ({ connectionId: '', services: [], refreshInterval: 60 })
   },
   'system-logs': {
     type: 'system-logs',
@@ -214,7 +214,7 @@ export const widgetRegistry: Record<WidgetType, WidgetDefinition> = {
     category: 'infrastructure',
     component: () => import('@/components/widgets/SystemLogsWidget.vue'),
     settingsForm: () => import('@/components/widgets/SystemLogsSettingsForm.vue'),
-    defaultConfig: () => ({ connectionId: '', service: '', priority: 'info', lines: 100, refreshInterval: 30 })
+    defaultConfig: () => ({ connectionId: '', service: '', priority: 'info', lines: 100, refreshInterval: 60 })
   },
   'database-monitor': {
     type: 'database-monitor',
@@ -224,7 +224,7 @@ export const widgetRegistry: Record<WidgetType, WidgetDefinition> = {
     category: 'infrastructure',
     component: () => import('@/components/widgets/DatabaseMonitorWidget.vue'),
     settingsForm: () => import('@/components/widgets/DatabaseMonitorSettingsForm.vue'),
-    defaultConfig: () => ({ connectionId: '', dbHost: '127.0.0.1', dbPort: 3306, dbUser: '', dbPassword: '', refreshInterval: 30 })
+    defaultConfig: () => ({ connectionId: '', dbHost: '127.0.0.1', dbPort: 3306, dbUser: '', dbPassword: '', refreshInterval: 60 })
   },
 }
 

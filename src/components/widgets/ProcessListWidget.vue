@@ -112,7 +112,10 @@ function sortIcon(col: 'cpu' | 'mem' | 'pid') {
 
 onMounted(() => {
   loadProcesses()
-  refreshTimer = setInterval(loadProcesses, (cfg.value.refreshInterval || 10) * 1000)
+  const interval = (cfg.value.refreshInterval || 30) * 1000
+  if (interval > 0) {
+    refreshTimer = setInterval(loadProcesses, interval)
+  }
 })
 
 onUnmounted(() => {

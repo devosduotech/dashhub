@@ -39,9 +39,12 @@ function update(key: string, value: unknown) {
     <div class="form-group">
       <label>Auto-Refresh</label>
       <select :value="cfg.refreshInterval" @change="update('refreshInterval', Number(($event.target as HTMLSelectElement).value))">
-        <option :value="10">10 seconds</option>
-        <option :value="30">30 seconds</option>
-        <option :value="60">60 seconds</option>
+          <option :value="0">Manual</option>
+          <option :value="30">30 seconds</option>
+          <option :value="60">60 seconds</option>
+          <option :value="300">5 minutes</option>
+          <option :value="900">15 minutes</option>
+          <option :value="1800">30 minutes</option>
       </select>
     </div>
 
